@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>The IAH: Synth-Core</title>
+    
+    <!-- Tailwind CSS for UI structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js for 3D Graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- PointerLockControls for First-Person View -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    
+    <!-- Tone.js for Generative Audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Rajdhani', sans-serif;
+            user-select: none;
+            touch-action: none; 
+            -webkit-touch-callout: none;
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 30, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.1);
+        }
+
+        .hud-text {
+            font-family: 'Share Tech Mono', monospace;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00ffff;
+            box-shadow: 0 0 8px #00ffff;
+        }
+        
+        .crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+        .crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+
+        /* CRT Scanline Effect */
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.4;
+        }
+
+        /* Custom Scrollbar for Chat */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar-thumb { background: #00ffff; border-radius: 3px; }
+
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+        }
+
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+    
+    <!-- Scanline Overlay -->
+    <div class="scanlines"></div>
+
+    <!-- UI Overlay (Hidden initially) -->
+    <div id="ui-layer" class="hidden absolute top-0 left-0 w-full h-full z-10 pointer-events-none">
+        
+        <!-- Crosshair -->
+        <div class="crosshair hidden md:block"></div>
+
+        <!-- Top Right Status -->
+        <div class="absolute top-4 right-4 glass-panel p-3 md:p-4 rounded-xl w-[calc(100vw-2rem)] sm:w-64 text-right z-30">
+            <h2 class="text-lg md:text-xl font-bold text-white tracking-widest uppercase">System Integrity</h2>
+            <div class="w-full bg-gray-800 h-2 md:h-3 mt-2 rounded overflow-hidden border border-cyan-900">
+                <div id="health-bar" class="bg-cyan-400 h-full w-full shadow-[0_0_10px_#00ffff] transition-all duration-300"></div>
+            </div>
+            <p id="health-text" class="hud-text mt-1 text-xs md:text-sm">100% / STABLE</p>
+            
+            <div class="mt-2 md:mt-4">
+                <p class="hud-text text-[10px] md:text-xs opacity-70">QUANTUM NODES SECURED</p>
+                <p id="score-text" class="text-xl md:text-2xl font-bold text-pink-500 shadow-pink-500/50 drop-shadow-md">0 / 5</p>
+            </div>
+        </div>
+
+        <!-- Chanakya-Core NLP Terminal -->
+        <div class="absolute top-32 left-4 md:top-auto md:bottom-4 md:left-4 glass-panel p-3 md:p-4 rounded-xl w-[calc(100vw-2rem)] md:w-96 pointer-events-auto flex flex-col h-48 md:h-64 z-30 transition-all">
+            <div class="flex items-center mb-2 border-b border-cyan-500/30 pb-2">
+                <div class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse mr-2 shadow-[0_0_8px_#00ffff]"></div>
+                <h3 class="font-bold text-white tracking-wider text-sm md:text-base">Chanakya-Core AI</h3>
+            </div>
+            
+            <div id="chat-log" class="flex-grow overflow-y-auto mb-3 hud-text text-xs md:text-sm flex flex-col gap-2">
+                <div class="text-cyan-300 opacity-80">> System Initialized. I am your neural assistant.</div>
+                <div class="text-cyan-300 opacity-80">> Input natural language commands to manipulate the Grid (e.g., "Heal me", "Destroy enemies", "Scan area").</div>
+            </div>
+
+            <div class="relative flex gap-2">
+                <input type="text" id="ai-input" 
+                    class="w-full bg-black/50 border border-cyan-500/50 rounded p-2 text-white hud-text text-sm focus:outline-none focus:border-cyan-400 transition-colors"
+                    placeholder="Type command..." autocomplete="off" spellcheck="false">
+                <button id="ai-send-btn" class="bg-cyan-700/80 hover:bg-cyan-500 text-white px-3 rounded border border-cyan-400 transition-colors">
+                    &#9166;
+                </button>
+                <div id="ai-processing" class="hidden absolute right-12 top-2 text-cyan-400 animate-spin">
+                    ⟳
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Controls (Visible only on touch devices) -->
+        <div id="mobile-controls" class="hidden absolute bottom-4 left-0 w-full px-4 justify-between items-end z-20 pointer-events-none">
+            
+            <!-- Left Side: Movement Virtual Joystick -->
+            <div id="joystick-zone" class="w-28 h-28 md:w-32 md:h-32 bg-cyan-900/30 rounded-full border border-cyan-500/50 relative pointer-events-auto flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,255,0.1)]">
+                <div id="joystick-knob" class="w-10 h-10 md:w-12 md:h-12 bg-cyan-400/80 rounded-full shadow-[0_0_10px_#00ffff]"></div>
+            </div>
+            
+            <!-- Right Side: Action Buttons -->
+            <div class="flex flex-col gap-3 pointer-events-auto">
+                <button id="mobile-sprint" class="w-14 h-14 bg-pink-900/40 border border-pink-500/50 rounded-full text-pink-400 font-bold backdrop-blur-sm active:bg-pink-500 active:text-white text-xs transition-colors shadow-[0_0_10px_rgba(255,0,255,0.2)]">SPRINT</button>
+                <button id="mobile-jump" class="w-16 h-16 bg-cyan-900/40 border border-cyan-500/50 rounded-full text-cyan-400 font-bold backdrop-blur-sm active:bg-cyan-400 active:text-black text-sm transition-colors shadow-[0_0_10px_rgba(0,255,255,0.2)]">JUMP</button>
+            </div>
+        </div>
+        
+        <!-- Center Notifications -->
+        <div id="notification-center" class="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-center transition-opacity duration-500 opacity-0">
+            <h1 id="notification-title" class="text-4xl font-bold text-white tracking-[0.2em] uppercase glitch-text">NODE SECURED</h1>
+            <p id="notification-desc" class="hud-text text-lg mt-2">Network stability increased.</p>
+        </div>
+    </div>
+
+    <!-- Start / Pause Menu -->
+    <div id="start-menu" class="absolute top-0 left-0 w-full h-full bg-black/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm px-4">
+        <h1 class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2 tracking-[0.2em] md:tracking-[0.3em] uppercase drop-shadow-[0_0_15px_rgba(0,255,255,0.5)] text-center">The IAH: Synth-Core</h1>
+        <p class="hud-text text-lg md:text-xl mb-6 md:mb-8 opacity-80 text-center">Procedural Cyber-Thriller</p>
+        
+        <div class="glass-panel p-6 md:p-8 rounded-2xl w-full max-w-lg text-center mb-6 border border-cyan-500/30">
+            <h3 class="text-white font-bold text-lg md:text-xl mb-4 border-b border-cyan-500/30 pb-2">OPERATION DIRECTIVES</h3>
+            <ul class="text-left text-gray-300 space-y-2 mb-6 font-mono text-xs md:text-sm">
+                <li><span class="text-cyan-400 font-bold">[W A S D] / [JOYSTICK]</span> - Navigate Grid</li>
+                <li><span class="text-cyan-400 font-bold">[SPACE] / [JUMP]</span> - Jump &nbsp;|&nbsp; <span class="text-cyan-400 font-bold">[SHIFT] / [SPRINT]</span> - Dash</li>
+                <li><span class="text-cyan-400 font-bold">[MOUSE] / [SWIPE]</span> - Look around</li>
+                <li><span class="text-cyan-400 font-bold">[ENTER] / [TAP]</span> - Use AI Terminal for commands</li>
+                <li><span class="text-pink-400 font-bold">OBJECTIVE:</span> Secure 5 Quantum Nodes (Yellow).</li>
+                <li><span class="text-red-400 font-bold">WARNING:</span> Evade Data Anomalies (Red).</li>
+            </ul>
+            <button id="start-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-8 md:px-12 rounded shadow-[0_0_15px_rgba(0,255,255,0.4)] transition-all transform hover:scale-105 tracking-widest w-full md:w-auto">
+                INITIALIZE LINK
+            </button>
+        </div>
+        <p class="text-gray-500 text-xs text-center max-w-sm">Tap or Click to engage neural uplink and audio environment.</p>
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        const GameState = {
+            isPlaying: false,
+            health: 100,
+            nodesSecured: 0,
+            totalNodes: 5,
+            anomalies: [],
+            nodes: [],
+            synthCityMap: [],
+            gridSize: 40,
+            cellSize: 20
+        };
+
+        // --- DOM ELEMENTS ---
+        const canvas = document.getElementById('game-canvas');
+        const startMenu = document.getElementById('start-menu');
+        const startBtn = document.getElementById('start-btn');
+        const uiLayer = document.getElementById('ui-layer');
+        const healthBar = document.getElementById('health-bar');
+        const healthText = document.getElementById('health-text');
+        const scoreText = document.getElementById('score-text');
+        const aiInput = document.getElementById('ai-input');
+        const aiSendBtn = document.getElementById('ai-send-btn');
+        const chatLog = document.getElementById('chat-log');
+        const aiProcessing = document.getElementById('ai-processing');
+        const notifCenter = document.getElementById('notification-center');
+        const notifTitle = document.getElementById('notification-title');
+        const notifDesc = document.getElementById('notification-desc');
+
+        // --- THREE.JS GLOBALS ---
+        let scene, camera, renderer, controls;
+        let clock = new THREE.Clock();
+        
+        // Physics / Movement
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let canJump = false;
+        let isSprinting = false;
+        const mass = 100;
+
+        // Device Detection & Mobile Control State
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        let joyX = 0, joyY = 0; // -1.0 to 1.0
+        let isLooking = false;
+        let touchLookX = 0, touchLookY = 0;
+        
+        // Materials
+        const materials = {
+            grid: new THREE.MeshBasicMaterial({ color: 0x001133, wireframe: true }),
+            building: new THREE.MeshLambertMaterial({ color: 0x0a0a0a }),
+            buildingNeon: new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3 }),
+            node: new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xbbbb00, roughness: 0.2 }),
+            anomaly: new THREE.MeshStandardMaterial({ color: 0xff0044, emissive: 0xaa0022, wireframe: true })
+        };
+
+        // Audio Synth components
+        let bgmSynth, alertSynth, actionSynth;
+        let bgmLoop;
+
+        async function initAudio() {
+            await Tone.start();
+            
+            // Background pulsing bass
+            bgmSynth = new Tone.FMSynth({
+                modulationIndex: 12.22,
+                envelope: { attack: 0.01, decay: 0.2 },
+                modulation: { type: "square" },
+                modulationEnvelope: { attack: 0.2, decay: 0.01 }
+            }).toDestination();
+            bgmSynth.volume.value = -15;
+
+            // Arpeggiator for BGM
+            const pattern = new Tone.Pattern(function(time, note){
+                bgmSynth.triggerAttackRelease(note, 0.1, time);
+            }, ["C2", "E2", "G2", "C3", "A2", "F2"], "upDown");
+            
+            pattern.interval = "8n";
+            Tone.Transport.start();
+            pattern.start(0);
+
+            // UI/Action Sounds
+            alertSynth = new Tone.MembraneSynth().toDestination();
+            alertSynth.volume.value = -10;
+            
+            actionSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sine" }
+            }).toDestination();
+            actionSynth.volume.value = -12;
+        }
+
+        function playSound(type) {
+            if(!Tone.context || Tone.context.state !== 'running') return;
+            if (type === 'node') {
+                actionSynth.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+            } else if (type === 'damage') {
+                alertSynth.triggerAttackRelease("C1", "8n");
+                alertSynth.triggerAttackRelease("C1", "8n", "+0.1");
+            } else if (type === 'ai_success') {
+                actionSynth.triggerAttackRelease(["C4", "G4"], "8n");
+            } else if (type === 'ai_fail') {
+                actionSynth.triggerAttackRelease(["G3", "C3"], "8n");
+            }
+        }
+
+        function init3D() {
+            // Scene Setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020205);
+            scene.fog = new THREE.FogExp2(0x020205, 0.008);
+
+            // Camera Setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0x00ffff, 0.5);
+            dirLight.position.set(100, 200, 50);
+            scene.add(dirLight);
+
+            const pinkLight = new THREE.PointLight(0xff00ff, 1, 200);
+            pinkLight.position.set(0, 50, 0);
+            scene.add(pinkLight);
+
+            // Renderer Setup
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Controls Setup
+            controls = new THREE.PointerLockControls(camera, document.body);
+            
+            scene.add(controls.getObject());
+            // Start position
+            controls.getObject().position.set(0, 5, 0);
+
+            controls.addEventListener('lock', function () {
+                startMenu.classList.add('hidden');
+                uiLayer.classList.remove('hidden');
+                GameState.isPlaying = true;
+            });
+
+            controls.addEventListener('unlock', function () {
+                if(GameState.health > 0 && GameState.nodesSecured < GameState.totalNodes) {
+                    startMenu.classList.remove('hidden');
+                    uiLayer.classList.add('hidden');
+                    GameState.isPlaying = false;
+                }
+            });
+
+            generateCity();
+            spawnNodes();
+            spawnAnomalies(15);
+        }
+
+        function generateCity() {
+            // Floor Grid
+            const floorGeo = new THREE.PlaneGeometry(GameState.gridSize * GameState.cellSize, GameState.gridSize * GameState.cellSize, GameState.gridSize, GameState.gridSize);
+            const floor = new THREE.Mesh(floorGeo, materials.grid);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            const floorPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(GameState.gridSize * GameState.cellSize, GameState.gridSize * GameState.cellSize),
+                new THREE.MeshBasicMaterial({color: 0x010103})
+            );
+            floorPlane.rotation.x = -Math.PI / 2;
+            floorPlane.position.y = -0.1;
+            scene.add(floorPlane);
+
+            // Generate Buildings
+            const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+            const offset = (GameState.gridSize * GameState.cellSize) / 2;
+
+            for (let x = 0; x < GameState.gridSize; x++) {
+                GameState.synthCityMap[x] = [];
+                for (let z = 0; z < GameState.gridSize; z++) {
+                    // Leave some empty spaces for streets
+                    if (Math.random() > 0.3 && (x % 3 !== 0) && (z % 3 !== 0)) {
+                        const height = Math.random() * 40 + 10;
+                        const w = GameState.cellSize * (0.6 + Math.random()*0.3);
+                        const d = GameState.cellSize * (0.6 + Math.random()*0.3);
+                        
+                        const building = new THREE.Mesh(boxGeo, materials.building);
+                        building.scale.set(w, height, d);
+                        
+                        const px = (x * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        const pz = (z * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        
+                        building.position.set(px, height / 2, pz);
+                        scene.add(building);
+                        
+                        // Add Neon Edges
+                        const edges = new THREE.EdgesGeometry(building.geometry);
+                        const line = new THREE.LineSegments(edges, materials.buildingNeon);
+                        line.scale.copy(building.scale);
+                        line.position.copy(building.position);
+                        scene.add(line);
+
+                        GameState.synthCityMap[x][z] = { exists: true, box: new THREE.Box3().setFromObject(building) };
+                    } else {
+                        GameState.synthCityMap[x][z] = { exists: false };
+                    }
+                }
+            }
+        }
+
+        function spawnNodes() {
+            const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
+            const offset = (GameState.gridSize * GameState.cellSize) / 2;
+            
+            for(let i=0; i < GameState.totalNodes; i++) {
+                const node = new THREE.Mesh(sphereGeo, materials.node);
+                
+                // Find empty spot
+                let placed = false;
+                while(!placed) {
+                    let rx = Math.floor(Math.random() * GameState.gridSize);
+                    let rz = Math.floor(Math.random() * GameState.gridSize);
+                    
+                    if(!GameState.synthCityMap[rx][rz].exists) {
+                        const px = (rx * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        const pz = (rz * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        node.position.set(px, 3, pz);
+                        scene.add(node);
+                        
+                        // Add point light to node
+                        const nodeLight = new THREE.PointLight(0xffff00, 1, 30);
+                        node.add(nodeLight);
+
+                        GameState.nodes.push({ mesh: node, active: true });
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        function spawnAnomalies(count) {
+            const geo = new THREE.OctahedronGeometry(1.5);
+            const offset = (GameState.gridSize * GameState.cellSize) / 2;
+
+            for(let i=0; i<count; i++) {
+                const mesh = new THREE.Mesh(geo, materials.anomaly);
+                let placed = false;
+                while(!placed) {
+                    let rx = Math.floor(Math.random() * GameState.gridSize);
+                    let rz = Math.floor(Math.random() * GameState.gridSize);
+                    if(!GameState.synthCityMap[rx][rz].exists) {
+                        const px = (rx * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        const pz = (rz * GameState.cellSize) - offset + (GameState.cellSize/2);
+                        mesh.position.set(px, 3, pz);
+                        scene.add(mesh);
+                        GameState.anomalies.push(mesh);
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        const onKeyDown = function ( event ) {
+            // If typing in chat, ignore movement
+            if(document.activeElement === aiInput) {
+                if(event.code === 'Enter') processAICommand();
+                return;
+            }
+
+            switch ( event.code ) {
+                case 'ArrowUp':
+                case 'KeyW': moveForward = true; break;
+                case 'ArrowLeft':
+                case 'KeyA': moveLeft = true; break;
+                case 'ArrowDown':
+                case 'KeyS': moveBackward = true; break;
+                case 'ArrowRight':
+                case 'KeyD': moveRight = true; break;
+                case 'Space': if ( canJump === true ) velocity.y += 35; canJump = false; break;
+                case 'ShiftLeft': isSprinting = true; break;
+                case 'Enter': 
+                    document.exitPointerLock();
+                    aiInput.focus();
+                    break;
+            }
+        };
+
+        const onKeyUp = function ( event ) {
+            switch ( event.code ) {
+                case 'ArrowUp':
+                case 'KeyW': moveForward = false; break;
+                case 'ArrowLeft':
+                case 'KeyA': moveLeft = false; break;
+                case 'ArrowDown':
+                case 'KeyS': moveBackward = false; break;
+                case 'ArrowRight':
+                case 'KeyD': moveRight = false; break;
+                case 'ShiftLeft': isSprinting = false; break;
+            }
+        };
+
+        document.addEventListener( 'keydown', onKeyDown );
+        document.addEventListener( 'keyup', onKeyUp );
+
+        // --- MOBILE TOUCH CONTROLS ---
+        if (isTouchDevice) {
+            // 1. Virtual Joystick (Movement)
+            const joystickZone = document.getElementById('joystick-zone');
+            const joystickKnob = document.getElementById('joystick-knob');
+            let joyActive = false;
+            let joyCenterX = 0, joyCenterY = 0;
+            const maxJoyRadius = 40; // Pixels
+
+            joystickZone.addEventListener('touchstart', (e) => {
+                joyActive = true;
+                const rect = joystickZone.getBoundingClientRect();
+                joyCenterX = rect.left + rect.width / 2;
+                joyCenterY = rect.top + rect.height / 2;
+                updateJoystick(e.touches[0]);
+            });
+
+            joystickZone.addEventListener('touchmove', (e) => {
+                if(!joyActive) return;
+                e.preventDefault(); // Prevent scrolling
+                updateJoystick(e.touches[0]);
+            });
+
+            joystickZone.addEventListener('touchend', () => {
+                joyActive = false;
+                joyX = 0; joyY = 0;
+                joystickKnob.style.transform = `translate(0px, 0px)`;
+            });
+
+            function updateJoystick(touch) {
+                let dx = touch.clientX - joyCenterX;
+                let dy = touch.clientY - joyCenterY;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                // Cap distance to max radius
+                if(distance > maxJoyRadius) {
+                    dx = (dx/distance) * maxJoyRadius;
+                    dy = (dy/distance) * maxJoyRadius;
+                }
+                
+                joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+                joyX = dx / maxJoyRadius;
+                joyY = dy / maxJoyRadius;
+            }
+
+            // 2. Touch Screen to Look (Right side of screen or non-UI areas)
+            document.addEventListener('touchstart', (e) => {
+                if(!GameState.isPlaying) return;
+                // Don't look if tapping UI panels or joystick
+                if(e.target.closest('#mobile-controls') || e.target.closest('.glass-panel')) return;
+                
+                isLooking = true;
+                touchLookX = e.touches[0].clientX;
+                touchLookY = e.touches[0].clientY;
+            }, {passive: false});
+
+            document.addEventListener('touchmove', (e) => {
+                if(!isLooking || !GameState.isPlaying) return;
+                
+                // Don't prevent default if tapping the chat input so keyboard can appear
+                if (e.target !== aiInput) {
+                    e.preventDefault(); 
+                }
+
+                // Find the appropriate touch (prioritize right side of screen or latest touch)
+                let touch = Array.from(e.touches).find(t => t.clientX > window.innerWidth / 3) || e.touches[0];
+                if (!touch) return;
+
+                let deltaX = touch.clientX - touchLookX;
+                let deltaY = touch.clientY - touchLookY;
+                
+                touchLookX = touch.clientX;
+                touchLookY = touch.clientY;
+
+                // Apply rotation directly to camera (Simulating PointerLock)
+                const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+                euler.setFromQuaternion(camera.quaternion);
+                
+                euler.y -= deltaX * 0.004; // Look sensitivity X
+                euler.x -= deltaY * 0.004; // Look sensitivity Y
+                
+                // Clamp Pitch (Looking up/down limits)
+                euler.x = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, euler.x));
+                
+                camera.quaternion.setFromEuler(euler);
+            }, {passive: false});
+
+            document.addEventListener('touchend', () => { isLooking = false; });
+
+            // 3. Action Buttons
+            const btnJump = document.getElementById('mobile-jump');
+            const btnSprint = document.getElementById('mobile-sprint');
+            
+            btnJump.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (canJump === true) velocity.y += 35; canJump = false;
+            });
+            
+            btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; });
+            btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; });
+        }
+
+        function checkCollisions(playerPos) {
+            // Simple grid bounds check
+            const offset = (GameState.gridSize * GameState.cellSize) / 2;
+            const gx = Math.floor((playerPos.x + offset) / GameState.cellSize);
+            const gz = Math.floor((playerPos.z + offset) / GameState.cellSize);
+
+            if(gx >= 0 && gx < GameState.gridSize && gz >= 0 && gz < GameState.gridSize) {
+                if(GameState.synthCityMap[gx][gz].exists) {
+                    return true; // Collision
+                }
+            } else {
+                return true; // Out of bounds
+            }
+            return false;
+        }
+
+        function addChatMessage(speaker, text, isSystem = false) {
+            const msgDiv = document.createElement('div');
+            let color = speaker === 'Player' ? 'text-white' : 'text-cyan-300';
+            if (isSystem) color = 'text-magenta-400 font-bold';
+            
+            msgDiv.className = `${color} opacity-90 transition-all`;
+            msgDiv.innerHTML = `> <span class="${speaker==='Chanakya'?'font-bold':''}">${speaker}:</span> ${text}`;
+            chatLog.appendChild(msgDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        aiSendBtn.addEventListener('click', processAICommand);
+
+        async function processAICommand() {
+            const rawText = aiInput.value.trim();
+            if(!rawText) return;
+            
+            addChatMessage('Player', rawText);
+            aiInput.value = '';
+            aiInput.blur();
+            
+            // Re-lock pointer only on desktop
+            if(!isTouchDevice) controls.lock(); 
+            
+            aiProcessing.classList.remove('hidden');
+
+            const systemPrompt = `You are Chanakya-Core, an AI assistant in a cyberpunk game. 
+            Analyze the player's command: "${rawText}".
+            Determine their intent from this strict list: [HEAL, NUKE, SCAN, JUMP].
+            Respond ONLY with a JSON object format: {"intent": "THE_INTENT", "reply": "A brief, immersive cyberpunk response"}.
+            If it matches nothing, use intent UNKNOWN.`;
+
+            try {
+                // Using Gemini-3-flash-preview. 
+                // Note: The empty key allows Canvas to auto-inject the runtime token.
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: systemPrompt }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                };
+
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error("Network response was not ok");
+                
+                const data = await res.json();
+                const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (textOutput) {
+                    const parsed = JSON.parse(textOutput);
+                    executeAIAction(parsed.intent, parsed.reply);
+                } else {
+                    throw new Error("Invalid format");
+                }
+            } catch (err) {
+                console.error("AI Error:", err);
+                addChatMessage('Chanakya', "Network interference detected. Command unparseable.", true);
+                playSound('ai_fail');
+            } finally {
+                aiProcessing.classList.add('hidden');
+            }
+        }
+
+        function executeAIAction(intent, reply) {
+            addChatMessage('Chanakya', reply);
+            playSound('ai_success');
+            
+            switch(intent) {
+                case 'HEAL':
+                    GameState.health = Math.min(100, GameState.health + 50);
+                    updateUI();
+                    showNotification("INTEGRITY RESTORED", "Chanakya-Core executed healing protocol.");
+                    break;
+                case 'NUKE':
+                    // Destroy anomalies within 100 units
+                    let destroyed = 0;
+                    const pPos = controls.getObject().position;
+                    for (let i = GameState.anomalies.length - 1; i >= 0; i--) {
+                        if (pPos.distanceTo(GameState.anomalies[i].position) < 150) {
+                            scene.remove(GameState.anomalies[i]);
+                            GameState.anomalies.splice(i, 1);
+                            destroyed++;
+                        }
+                    }
+                    showNotification("ANOMALIES PURGED", `${destroyed} threats neutralized in local sector.`);
+                    break;
+                case 'SCAN':
+                    // Highlight nodes
+                    GameState.nodes.forEach(n => {
+                        if(n.active) {
+                            n.mesh.material.emissiveIntensity = 5;
+                            setTimeout(() => n.mesh.material.emissiveIntensity = 1, 3000);
+                        }
+                    });
+                    showNotification("SCAN COMPLETE", "Quantum Nodes highlighted in grid.");
+                    break;
+                case 'JUMP':
+                    velocity.y = 100; // Super jump
+                    showNotification("GRAVITY OVERRIDE", "Vertical thrust maximized.");
+                    break;
+                default:
+                    playSound('ai_fail');
+                    break;
+            }
+        }
+
+        function showNotification(title, desc) {
+            notifTitle.textContent = title;
+            notifDesc.textContent = desc;
+            notifCenter.classList.remove('opacity-0');
+            setTimeout(() => notifCenter.classList.add('opacity-0'), 3000);
+        }
+
+        function updateUI() {
+            healthBar.style.width = GameState.health + '%';
+            if(GameState.health > 50) {
+                healthBar.className = "h-full w-full shadow-[0_0_10px_#00ffff] transition-all duration-300 bg-cyan-400";
+                healthText.textContent = `${Math.floor(GameState.health)}% / STABLE`;
+                healthText.style.color = '#00ffff';
+            } else if (GameState.health > 20) {
+                healthBar.className = "h-full w-full shadow-[0_0_10px_#ffff00] transition-all duration-300 bg-yellow-400";
+                healthText.textContent = `${Math.floor(GameState.health)}% / DEGRADED`;
+                healthText.style.color = '#ffff00';
+            } else {
+                healthBar.className = "h-full w-full shadow-[0_0_10px_#ff0000] transition-all duration-300 bg-red-600 animate-pulse";
+                healthText.textContent = `${Math.floor(GameState.health)}% / CRITICAL`;
+                healthText.style.color = '#ff0000';
+            }
+            scoreText.textContent = `${GameState.nodesSecured} / ${GameState.totalNodes}`;
+            
+            if (GameState.nodesSecured >= GameState.totalNodes) {
+                showNotification("SYSTEM SECURED", "All Quantum Nodes synchronized. Standby for extraction.");
+                GameState.isPlaying = false;
+                controls.unlock();
+                setTimeout(() => { location.reload(); }, 5000);
+            }
+            
+            if (GameState.health <= 0) {
+                showNotification("SYSTEM FAILURE", "Neural link severed. Rebooting...");
+                GameState.isPlaying = false;
+                controls.unlock();
+                setTimeout(() => { location.reload(); }, 3000);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Execute physics and movement if playing and (pointer locked OR on mobile)
+            if (GameState.isPlaying && (controls.isLocked || isTouchDevice)) {
+                const delta = clock.getDelta();
+                const playerObj = controls.getObject();
+                const currentPos = playerObj.position.clone();
+
+                // --- Physics & Movement ---
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= 9.8 * mass * delta; // Gravity
+
+                // Combine Keyboard and Joystick inputs
+                let inputZ = Number( moveForward ) - Number( moveBackward );
+                let inputX = Number( moveRight ) - Number( moveLeft );
+
+                if (isTouchDevice) {
+                    inputZ += joyY; // Forward is -Z, joystick Up is negative joyY. Matches perfectly.
+                    inputX += joyX; // Right is +X, joystick Right is positive joyX.
+                }
+
+                direction.z = inputZ;
+                direction.x = inputX;
+
+                // Normalize direction if moving diagonally to prevent faster speed
+                if (direction.lengthSq() > 0) {
+                    direction.normalize();
+                }
+
+                const speed = isSprinting ? 600.0 : 300.0;
+                let finalSpeed = speed;
+
+                // Scale speed for analog joystick feel (optional, but good for mobile)
+                if (isTouchDevice) {
+                    const joyMagnitude = Math.min(1, Math.sqrt(joyX*joyX + joyY*joyY));
+                    if (joyMagnitude > 0) finalSpeed *= joyMagnitude;
+                }
+
+                if ( moveForward || moveBackward || (isTouchDevice && joyY !== 0) ) velocity.z -= direction.z * finalSpeed * delta;
+                if ( moveLeft || moveRight || (isTouchDevice && joyX !== 0) ) velocity.x -= direction.x * finalSpeed * delta;
+
+                controls.moveRight( - velocity.x * delta );
+                controls.moveForward( - velocity.z * delta );
+
+                // Collision Check (Revert position if hit)
+                if(checkCollisions(playerObj.position)) {
+                    playerObj.position.x = currentPos.x;
+                    playerObj.position.z = currentPos.z;
+                }
+
+                playerObj.position.y += ( velocity.y * delta ); 
+
+                if ( playerObj.position.y < 5 ) {
+                    velocity.y = 0;
+                    playerObj.position.y = 5;
+                    canJump = true;
+                }
+
+                // --- Entity Logic ---
+                // Anomaly (Enemy) Logic
+                GameState.anomalies.forEach(anomaly => {
+                    // Rotate
+                    anomaly.rotation.x += 0.01;
+                    anomaly.rotation.y += 0.02;
+
+                    // Move slowly towards player
+                    const dist = anomaly.position.distanceTo(playerObj.position);
+                    if(dist < 50) {
+                        anomaly.position.lerp(playerObj.position, delta * 0.5);
+                    }
+
+                    // Damage player
+                    if(dist < 3) {
+                        GameState.health -= 20 * delta;
+                        updateUI();
+                        // Visual glitch effect on UI
+                        uiLayer.style.opacity = Math.random() > 0.5 ? 0.8 : 1;
+                        if(Math.random() < 0.1) playSound('damage');
+                    } else {
+                        uiLayer.style.opacity = 1;
+                    }
+                });
+
+                // Node (Collectible) Logic
+                GameState.nodes.forEach(nodeObj => {
+                    if (nodeObj.active) {
+                        nodeObj.mesh.rotation.y += 0.01;
+                        nodeObj.mesh.position.y = 3 + Math.sin(clock.elapsedTime * 2) * 0.5;
+
+                        if (playerObj.position.distanceTo(nodeObj.mesh.position) < 4) {
+                            nodeObj.active = false;
+                            scene.remove(nodeObj.mesh);
+                            GameState.nodesSecured++;
+                            updateUI();
+                            playSound('node');
+                            showNotification("NODE SECURED", "Network integrity reinforcing.");
+                            // Restore some health as reward
+                            GameState.health = Math.min(100, GameState.health + 20);
+                            updateUI();
+                        }
+                    }
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            if (!camera || !renderer) return; 
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        startBtn.addEventListener('click', async () => {
+            // Init Audio context on user gesture
+            await initAudio();
+            
+            // Init 3D World if not already
+            if(!scene) {
+                init3D();
+                animate();
+            }
+            
+            if (isTouchDevice) {
+                // Mobile initialization (No PointerLock)
+                startMenu.classList.add('hidden');
+                uiLayer.classList.remove('hidden');
+                
+                const mobileControls = document.getElementById('mobile-controls');
+                mobileControls.classList.remove('hidden');
+                mobileControls.classList.add('flex');
+                
+                camera.rotation.order = 'YXZ'; // Ensure proper rotation order for mobile touch look
+                GameState.isPlaying = true;
+            } else {
+                // Desktop initialization
+                controls.lock();
+            }
+        });
+
+    </script>
+</body>
+</html>
