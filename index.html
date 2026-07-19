@@ -2,19 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The IAH: Synth-Core - Ultimate Offline Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>The IAH: Synth-Core - Ultimate Edition</title>
     
-    <!-- Tailwind CSS for modern neon UI layout -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Three.js for immersive 3D grid graphics -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- PointerLockControls for first-person keyboard/mouse view -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
-    
-    <!-- Tone.js for generative synthesizer music and sounds -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <style>
@@ -39,7 +32,6 @@
             z-index: 1;
         }
 
-        /* Glassmorphism cyberpunk styling panel */
         .glass-panel {
             background: rgba(8, 12, 24, 0.65);
             backdrop-filter: blur(14px);
@@ -59,7 +51,6 @@
             text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
         }
 
-        /* Target HUD crosshair locator */
         .crosshair {
             position: absolute;
             top: 50%;
@@ -81,7 +72,6 @@
         .crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
         .crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
 
-        /* Retro screen scanline CRT overlay */
         .scanlines {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -92,7 +82,6 @@
             opacity: 0.35;
         }
 
-        /* Custom scrollbars for cybernetic terminal window */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); }
         ::-webkit-scrollbar-thumb { background: #00ffff; border-radius: 4px; }
@@ -107,7 +96,6 @@
             62% { transform: translate(0,0) skew(3deg); }
         }
 
-        /* Matrix terminal loading dot pulses */
         .cyber-pulse {
             animation: cyber-glow 2s infinite ease-in-out;
         }
@@ -120,32 +108,25 @@
 </head>
 <body>
 
-    <!-- 3D/2D Master Rendering Canvas -->
     <canvas id="game-canvas"></canvas>
-    
-    <!-- Scanline Simulation Screen Overlay -->
     <div class="scanlines"></div>
 
-    <!-- Main Interactive Heads-Up Display (HUD) Layer -->
     <div id="ui-layer" class="hidden absolute top-0 left-0 w-full h-full z-10 pointer-events-none">
         
-        <!-- Crosshair HUD marker -->
-        <div id="hud-crosshair" class="crosshair hidden md:block"></div>
+        <div id="hud-crosshair" class="crosshair"></div>
 
-        <!-- System & Core Status Tracking Block (Top-Right) -->
+        <!-- System & Core Status Tracking Block -->
         <div class="absolute top-4 right-4 glass-panel p-3 md:p-4 rounded-xl w-40 md:w-64 max-w-[45vw] text-right z-30 pointer-events-auto">
             <div class="flex justify-between items-center mb-1">
                 <span id="network-badge" class="text-[8px] md:text-xs font-bold tracking-widest px-1.5 py-0.5 rounded bg-cyan-900/50 text-cyan-400 border border-cyan-400/30">ONLINE</span>
                 <h2 class="text-xs md:text-lg font-bold text-white tracking-widest uppercase truncate">SYSTEM</h2>
             </div>
             
-            <!-- Health Bar -->
             <div class="w-full bg-gray-900 h-2 md:h-3 rounded overflow-hidden border border-cyan-950">
                 <div id="health-bar" class="bg-cyan-400 h-full w-full shadow-[0_0_10px_#00ffff] transition-all duration-300"></div>
             </div>
             <p id="health-text" class="hud-text mt-1 text-[8px] md:text-xs truncate">100% / INTEGRITY STABLE</p>
 
-            <!-- Premium Shield Bar (Visible only when purchased) -->
             <div id="shield-hud-container" class="hidden mt-2">
                 <div class="w-full bg-gray-900 h-1.5 md:h-2 rounded overflow-hidden border border-purple-950">
                     <div id="shield-bar" class="bg-purple-500 h-full w-full shadow-[0_0_10px_#a855f7] transition-all duration-300"></div>
@@ -153,7 +134,6 @@
                 <p class="text-purple-400 font-mono text-[8px] md:text-[10px] uppercase">Quantum Shield Active</p>
             </div>
             
-            <!-- Progress Sectors -->
             <div class="mt-2 md:mt-3 flex justify-between items-end border-t border-cyan-500/15 pt-2">
                 <div>
                     <p class="hud-text text-[7px] md:text-[10px] opacity-70 text-left">SECTOR TIER</p>
@@ -166,13 +146,12 @@
             </div>
         </div>
 
-        <!-- Toggle Button for Chanakya-Core Neural Assistant (Left-Hand Side) -->
+        <!-- Toggle Buttons -->
         <div id="ai-toggle-btn" class="absolute top-4 left-4 glass-panel p-2 md:p-3 rounded-xl pointer-events-auto cursor-pointer flex items-center gap-2 hover:bg-cyan-950/70 transition-all z-40 shadow-[0_0_15px_rgba(0,255,255,0.1)]">
             <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00ffff]"></div>
             <span class="text-white font-bold text-xs tracking-wider uppercase">AI TERMINAL [ENTER]</span>
         </div>
 
-        <!-- Premium Neural Upgrades Marketplace Button (Right-Hand Side under HUD) -->
         <div id="shop-toggle-btn" class="absolute top-36 md:top-44 right-4 glass-panel premium-border p-2 md:p-3 rounded-xl pointer-events-auto cursor-pointer flex items-center gap-2 hover:bg-yellow-950/50 transition-all z-40">
             <span class="text-yellow-400 font-bold text-xs tracking-wider uppercase flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
@@ -180,7 +159,7 @@
             </span>
         </div>
 
-        <!-- Chanakya-Core NLP Command Console Overlay (Top-Left under toggle) -->
+        <!-- AI Terminal Overlay -->
         <div id="ai-terminal" class="hidden absolute top-16 left-4 glass-panel p-3 md:p-4 rounded-xl w-64 md:w-96 max-w-[85vw] pointer-events-auto flex flex-col h-56 md:h-64 z-50 transition-all shadow-[0_0_20px_rgba(0,255,255,0.2)]">
             <button id="ai-close-btn" class="absolute top-2.5 right-2.5 text-cyan-500 hover:text-cyan-300 font-bold transition-colors">✕</button>
             <div class="flex items-center mb-1.5 border-b border-cyan-500/30 pb-2 pr-6">
@@ -206,7 +185,7 @@
             </div>
         </div>
 
-        <!-- Premium Store System Overlay Panel -->
+        <!-- Premium Shop Interface -->
         <div id="premium-shop" class="hidden absolute top-16 right-4 glass-panel premium-border p-4 rounded-xl w-72 md:w-96 max-w-[90vw] pointer-events-auto flex flex-col max-h-[75vh] z-50 shadow-[0_0_25px_rgba(212,175,55,0.25)]">
             <button id="shop-close-btn" class="absolute top-2.5 right-2.5 text-yellow-500 hover:text-yellow-300 font-bold transition-colors">✕</button>
             
@@ -214,7 +193,6 @@
                 <h3 class="font-bold text-yellow-400 tracking-wider text-sm md:text-base flex items-center gap-1">
                     🌟 NEURAL REPLICATOR
                 </h3>
-                <!-- Currency Selection Unit -->
                 <div class="flex gap-1 bg-black/40 p-1 rounded border border-yellow-500/20">
                     <button class="currency-tab text-[9px] font-bold px-1.5 py-0.5 rounded text-yellow-400 bg-yellow-950/60 border border-yellow-500/30" data-cur="USD">USD</button>
                     <button class="currency-tab text-[9px] font-bold px-1.5 py-0.5 rounded text-gray-400 hover:text-white" data-cur="GBP">GBP</button>
@@ -223,7 +201,6 @@
             </div>
 
             <div class="flex-grow overflow-y-auto space-y-3 pr-1 text-xs text-gray-300">
-                <!-- Item 1: Plasma Rifle -->
                 <div class="bg-black/40 p-2.5 rounded border border-cyan-950 hover:border-cyan-800 transition-all">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-cyan-400 tracking-wide">Hyper Plasma Caster</span>
@@ -233,7 +210,6 @@
                     <button class="buy-btn mt-2 w-full bg-cyan-900/50 hover:bg-cyan-500 text-white font-bold py-1 px-2 rounded border border-cyan-400/50 text-[10px] transition-all" data-item="plasma">SYNTHESIZE UPLINK</button>
                 </div>
 
-                <!-- Item 2: Tactical Drone Companion -->
                 <div class="bg-black/40 p-2.5 rounded border border-purple-950 hover:border-purple-800 transition-all">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-purple-400 tracking-wide">Cyber Drone Assistant</span>
@@ -243,7 +219,6 @@
                     <button class="buy-btn mt-2 w-full bg-purple-900/50 hover:bg-purple-500 text-white font-bold py-1 px-2 rounded border border-purple-400/50 text-[10px] transition-all" data-item="drone">SYNTHESIZE UPLINK</button>
                 </div>
 
-                <!-- Item 3: Quantum Shield Matrix -->
                 <div class="bg-black/40 p-2.5 rounded border border-pink-950 hover:border-pink-800 transition-all">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-pink-400 tracking-wide">Shield Core Integrator</span>
@@ -253,7 +228,6 @@
                     <button class="buy-btn mt-2 w-full bg-pink-900/50 hover:bg-pink-500 text-white font-bold py-1 px-2 rounded border border-pink-400/50 text-[10px] transition-all" data-item="shield">SYNTHESIZE UPLINK</button>
                 </div>
 
-                <!-- Item 4: AI Pro Console Subscription -->
                 <div class="bg-black/40 p-2.5 rounded border border-yellow-950 hover:border-yellow-800 transition-all">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-yellow-400 tracking-wide">Chanakya AI Pro Access</span>
@@ -265,15 +239,12 @@
             </div>
         </div>
 
-        <!-- Mobile Action interface controls (rendered on touch viewports) -->
+        <!-- Mobile Action Controls -->
         <div id="mobile-controls" class="hidden absolute bottom-4 left-0 w-full px-4 justify-between items-end z-20 pointer-events-none">
-            
-            <!-- Left Side: Movement Virtual Joystick -->
             <div id="joystick-zone" class="w-24 h-24 bg-cyan-900/25 rounded-full border border-cyan-500/30 relative pointer-events-auto flex items-center justify-center backdrop-blur-sm shadow-[0_0_12px_rgba(0,255,255,0.08)]">
                 <div id="joystick-knob" class="w-8 h-8 bg-cyan-400/70 rounded-full shadow-[0_0_8px_#00ffff]"></div>
             </div>
             
-            <!-- Right Side: Interaction Combat Buttons -->
             <div class="flex flex-col gap-2.5 pointer-events-auto items-end">
                 <button id="mobile-shoot" class="w-14 h-14 bg-red-950/40 border border-red-500/40 rounded-full text-red-400 font-bold backdrop-blur-sm active:bg-red-500 active:text-white text-xs transition-colors shadow-[0_0_8px_rgba(255,0,0,0.15)] mb-1">FIRE</button>
                 <div class="flex gap-2">
@@ -283,14 +254,14 @@
             </div>
         </div>
         
-        <!-- Center Notification Feed -->
-        <div id="notification-center" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center transition-opacity duration-500 opacity-0 z-50 w-full px-4">
+        <!-- Notifications -->
+        <div id="notification-center" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center transition-opacity duration-500 opacity-0 z-50 w-full px-4 pointer-events-none">
             <h1 id="notification-title" class="text-2xl md:text-4xl font-bold text-white tracking-[0.2em] uppercase glitch-text drop-shadow-[0_0_10px_rgba(0,255,255,0.8)]">NODE SYNCHRONIZED</h1>
             <p id="notification-desc" class="hud-text text-xs md:text-sm mt-1 bg-black/60 inline-block px-3 py-1 rounded">Network efficiency upgraded.</p>
         </div>
     </div>
 
-    <!-- Checkout Transaction Modal Screen -->
+    <!-- Checkout Modal -->
     <div id="checkout-modal" class="hidden absolute top-0 left-0 w-full h-full bg-black/90 z-[100] flex items-center justify-center backdrop-blur-md px-4">
         <div class="glass-panel premium-border p-6 rounded-2xl w-full max-w-md text-center flex flex-col relative">
             <h3 class="text-yellow-400 font-bold text-lg md:text-xl tracking-wider mb-2 flex items-center justify-center gap-1.5">
@@ -328,7 +299,6 @@
                 </div>
             </div>
 
-            <!-- Transaction Animation Screen overlay -->
             <div id="checkout-processing" class="hidden absolute inset-0 bg-black/95 rounded-2xl flex flex-col items-center justify-center p-6 text-cyan-400">
                 <div class="cyber-pulse w-12 h-12 rounded-full border border-cyan-400 flex items-center justify-center animate-spin mb-4 text-xl">⟳</div>
                 <div id="processing-log" class="font-mono text-[10px] space-y-1.5 text-left w-full max-w-xs leading-relaxed">
@@ -338,7 +308,7 @@
         </div>
     </div>
 
-    <!-- Boot Loading & Interactive Welcome Start Menu -->
+    <!-- Start Menu -->
     <div id="start-menu" class="absolute top-0 left-0 w-full h-full bg-black/90 z-50 flex flex-col items-center justify-center backdrop-blur-sm px-4">
         <h1 class="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(0,255,255,0.4)] text-center font-sans">The IAH: Synth-Core</h1>
         <p class="hud-text text-sm md:text-lg mb-6 opacity-85 text-center tracking-widest">PROCEDURAL RESILIENT CYBER-THRILLER</p>
@@ -352,17 +322,20 @@
                 <li><span class="text-cyan-400 font-bold">[MOUSE / SWIPE]</span> - Recalibrate look orientation</li>
                 <li><span class="text-cyan-400 font-bold">[ENTER] / [TAP]</span> - Open Chanakya-Core NLP terminal</li>
                 <li class="border-t border-cyan-500/10 pt-1.5"><span class="text-pink-400 font-bold">GAMEPLAY TACTICS:</span> Capture Yellow Quantum Nodes to reinforce integrity levels and advance systems infinitely. Destroy emerging red anomalies.</li>
-                <li><span class="text-yellow-400 font-bold">OFFLINE BACKUP ACTIVE:</span> Built with auto-adapting 2D vector graphic backup engine if offline on boot.</li>
+                <li><span class="text-yellow-400 font-bold">OFFLINE BACKUP ACTIVE:</span> Auto-adapts to 2D vector graphic backup engine if offline on boot.</li>
             </ul>
             <button id="start-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-10 rounded shadow-[0_0_15px_rgba(0,255,255,0.4)] transition-all transform hover:scale-105 tracking-widest w-full sm:w-auto text-xs">
                 INITIALIZE LINK
             </button>
         </div>
-        <p class="text-gray-500 text-[10px] text-center max-w-sm">Authenticates and secures offline fallback modules automatically upon launch.</p>
+        <p class="text-gray-500 text-[10px] text-center max-w-sm">Authenticates and secures responsive fallback modules automatically upon launch.</p>
     </div>
 
     <script>
-        // --- GAME CORE ENGINE VARIABLES ---
+        // Environment Detection
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        
+        // Game State Variables
         const GameState = {
             isPlaying: false,
             health: 100,
@@ -377,12 +350,11 @@
             synthCityMap: [],
             gridSize: 40,
             cellSize: 20,
-            isOfflineEngine: false, // Set to true if Three.js fails to initialize (2D vector fallback)
-            playerPos: { x: 0, y: 5, z: 0 }, // Synchronized coordinates between engines
+            isOfflineEngine: false, 
+            playerPos: { x: 0, y: 5, z: 0 }, 
             droneOrbitAngle: 0
         };
 
-        // --- PREMIUM MARKET VECTORS ---
         const PremiumState = {
             currency: 'USD',
             plasmaRifle: false,
@@ -391,7 +363,7 @@
             chanakyaPro: false
         };
 
-        // --- DOM REFERENCE MANAGEMENT ---
+        // DOM Element Mapping
         const canvas = document.getElementById('game-canvas');
         const startMenu = document.getElementById('start-menu');
         const startBtn = document.getElementById('start-btn');
@@ -404,7 +376,6 @@
         const levelText = document.getElementById('level-text');
         const networkBadge = document.getElementById('network-badge');
         
-        // --- CHAT & MARKET UI DOM ELEMENTS ---
         const aiToggleBtn = document.getElementById('ai-toggle-btn');
         const aiTerminal = document.getElementById('ai-terminal');
         const aiCloseBtn = document.getElementById('ai-close-btn');
@@ -416,7 +387,6 @@
         const premiumShop = document.getElementById('premium-shop');
         const shopCloseBtn = document.getElementById('shop-close-btn');
         
-        // --- CHECKOUT DOM REFERENCES ---
         const checkoutModal = document.getElementById('checkout-modal');
         const cancelCheckoutBtn = document.getElementById('cancel-checkout-btn');
         const approveCheckoutBtn = document.getElementById('approve-checkout-btn');
@@ -428,47 +398,38 @@
         const shopProductCurrency = document.getElementById('shop-product-currency');
         const currencyTabs = document.querySelectorAll('.currency-tab');
 
-        // --- NOTIFICATION FEED ---
         const notifCenter = document.getElementById('notification-center');
         const notifTitle = document.getElementById('notification-title');
         const notifDesc = document.getElementById('notification-desc');
 
-        // --- GRAPHICS GRAPH INSTANCES ---
+        // Engine Globals
         let scene, camera, renderer, controls;
         let clock = new THREE.Clock();
-        
-        // --- 2D OFFLINE VECTOR FALLBACK SYSTEM STATE ---
         let ctx2d = null;
         let mousePos = { x: 0, y: 0 };
         
-        // --- COMBAT & PARTICLES ---
         const bullets = [];
         const enemyBullets = [];
         const particles = [];
         let lastFireTime = 0;
-        let playerFireRate = 0.15; // Modified instantly by upgrades
+        let playerFireRate = 0.15; 
 
-        // --- PHYSICS / COORDINATE SYSTEM TRACERS ---
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let canJump = false;
-        let isSprinting = false;
+        let canJump = false, isSprinting = false;
         const mass = 100;
 
-        // --- INTERACTION & MOBILE TRIGGERS ---
         let joyX = 0, joyY = 0; 
         let isLooking = false;
         let touchLookX = 0, touchLookY = 0;
 
-        // --- AUDIO COMPONENT STATE ---
+        // Audio State
         let bgmSynth = null, alertSynth = null, actionSynth = null;
         let shootSynth = null, explosionSynth = null;
         let audioInitialized = false;
         let lastDamageSoundTime = 0;
 
-        // --- STREAMING_CHUNK: Implementing Offline Audio Native Oscillator Fallback ---
-        // Native Web Audio API Synthesizer (Ensures robust audio synthesis 100% offline without Tone.js)
         const WebAudioFallback = {
             ctx: null,
             init() {
@@ -480,8 +441,7 @@
                 }
             },
             play(type) {
-                this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || this.ctx.state !== 'running') return;
                 
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
@@ -518,17 +478,17 @@
                         osc.stop(now + 0.18);
                     } else if (type === 'node') {
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(523.25, now); // C5
-                        osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                        osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                        osc.frequency.setValueAtTime(523.25, now);
+                        osc.frequency.setValueAtTime(659.25, now + 0.08); 
+                        osc.frequency.setValueAtTime(783.99, now + 0.16); 
                         gain.gain.setValueAtTime(0.08, now);
                         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
                         osc.start(now);
                         osc.stop(now + 0.25);
                     } else if (type === 'ai_success') {
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(392, now); // G4
-                        osc.frequency.setValueAtTime(783.99, now + 0.1); // G5
+                        osc.frequency.setValueAtTime(392, now); 
+                        osc.frequency.setValueAtTime(783.99, now + 0.1); 
                         gain.gain.setValueAtTime(0.06, now);
                         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
                         osc.start(now);
@@ -543,28 +503,24 @@
                         osc.stop(now + 0.25);
                     }
                 } catch (err) {
-                    console.warn("Native oscillator operation error handled safely:", err);
+                    console.warn("Audio exception isolated:", err);
                 }
             }
         };
 
-        // --- STREAMING_CHUNK: Initializing Tone.js or Fallback Audio Context ---
-        // Audio Engine Initializer
         async function initAudio() {
             if (audioInitialized) return;
             audioInitialized = true;
+            WebAudioFallback.init();
 
-            // Verify if Tone.js loaded successfully
             if (typeof Tone === 'undefined') {
-                console.warn("Tone.js CDN unavailable. Routing sound output through Native WebAudio Synth Engine.");
-                WebAudioFallback.init();
+                console.warn("Tone.js unavailable. Utilizing Native WebAudio Synth Engine.");
                 return;
             }
 
             try {
                 await Tone.start();
                 
-                // PolySynth initialization
                 bgmSynth = new Tone.PolySynth(Tone.FMSynth, {
                     modulationIndex: 12,
                     envelope: { attack: 0.01, decay: 0.22 },
@@ -573,20 +529,14 @@
                 }).toDestination();
                 bgmSynth.volume.value = -16;
 
-                // Infinite Cyber Ambient BGM Sequencer
                 const pattern = new Tone.Pattern(function(time, note){
-                    try {
-                        bgmSynth.triggerAttackRelease(note, "8n", time);
-                    } catch (e) {
-                        console.warn("BGM exception safely handled:", e.message);
-                    }
+                    try { bgmSynth.triggerAttackRelease(note, "8n", time); } catch(e){}
                 }, ["C2", "Eb2", "G2", "Eb3", "Bb2", "F2"], "upDown");
                 
                 pattern.interval = "8n";
                 Tone.Transport.start();
                 pattern.start(0);
 
-                // Initialize tactical membrane/noise synthesizers
                 alertSynth = new Tone.MembraneSynth().toDestination();
                 alertSynth.volume.value = -12;
                 
@@ -609,14 +559,11 @@
                 }).toDestination();
                 explosionSynth.volume.value = -12;
             } catch (err) {
-                console.warn("Tone.js instantiation failed. Standardizing audio to Native Audio Fallback.", err);
-                WebAudioFallback.init();
+                console.warn("Tone.js setup failed. Reverting to Native Audio Fallback.", err);
             }
         }
 
-        // Global playSound router
         function playSound(type) {
-            // Fall back to WebAudioFallback if Tone.js is not initialized or failed
             if (typeof Tone === 'undefined' || !Tone.context || Tone.context.state !== 'running' || !bgmSynth) {
                 WebAudioFallback.play(type);
                 return;
@@ -624,46 +571,34 @@
 
             const now = Tone.now();
             try {
-                if (type === 'node') {
-                    actionSynth.triggerAttackRelease(["C5", "Eb5", "Ab5"], "8n", now);
-                } else if (type === 'damage') {
+                if (type === 'node') actionSynth.triggerAttackRelease(["C5", "Eb5", "Ab5"], "8n", now);
+                else if (type === 'damage') {
                     if (now - lastDamageSoundTime < 0.22) return; 
                     lastDamageSoundTime = now;
                     alertSynth.triggerAttackRelease("Gb1", "8n", now);
-                } else if (type === 'ai_success') {
-                    actionSynth.triggerAttackRelease(["Eb4", "Bb4"], "8n", now);
-                } else if (type === 'ai_fail') {
-                    actionSynth.triggerAttackRelease(["D3", "A2"], "8n", now);
-                } else if (type === 'shoot') {
-                    shootSynth.triggerAttackRelease("16n", now);
-                } else if (type === 'explosion') {
-                    explosionSynth.triggerAttackRelease("C1", "8n", now);
                 }
+                else if (type === 'ai_success') actionSynth.triggerAttackRelease(["Eb4", "Bb4"], "8n", now);
+                else if (type === 'ai_fail') actionSynth.triggerAttackRelease(["D3", "A2"], "8n", now);
+                else if (type === 'shoot') shootSynth.triggerAttackRelease("16n", now);
+                else if (type === 'explosion') explosionSynth.triggerAttackRelease("C1", "8n", now);
             } catch (err) {
-                // Defensive recovery
                 WebAudioFallback.play(type);
             }
         }
 
-        // --- STREAMING_CHUNK: Setting Up Dual-Engine Initialization Flow ---
-        // Setup Primary 3D and Fallback 2D Graphic Engines
         function initGraphics() {
-            // Determine internet/Three.js state on startup
             if (typeof THREE === 'undefined') {
                 setup2DOfflineEngine();
                 return;
             }
 
             try {
-                // Primary 3D Rendering setup
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0x020206);
                 scene.fog = new THREE.FogExp2(0x020206, 0.009);
 
                 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
-                scene.add(ambientLight);
+                scene.add(new THREE.AmbientLight(0xffffff, 0.25));
                 
                 const dirLight = new THREE.DirectionalLight(0x00ffff, 0.55);
                 dirLight.position.set(120, 220, 60);
@@ -681,6 +616,7 @@
                 scene.add(controls.getObject());
                 controls.getObject().position.set(0, 5, 0);
 
+                // Seamless Menu handling via PointerLock status
                 controls.addEventListener('lock', function () {
                     startMenu.classList.add('hidden');
                     uiLayer.classList.remove('hidden');
@@ -688,7 +624,11 @@
                 });
 
                 controls.addEventListener('unlock', function () {
-                    if (GameState.health > 0 && !premiumShop.classList.contains('hidden') === false && !checkoutModal.classList.contains('hidden') === false) {
+                    if (GameState.health > 0 && 
+                        premiumShop.classList.contains('hidden') && 
+                        checkoutModal.classList.contains('hidden') && 
+                        aiTerminal.classList.contains('hidden')) {
+                        
                         startMenu.classList.remove('hidden');
                         uiLayer.classList.add('hidden');
                         GameState.isPlaying = false;
@@ -699,58 +639,41 @@
                 spawnNodes(GameState.totalNodes);
                 spawnAnomalies(15);
             } catch (error) {
-                console.error("3D Context failure, redirecting to 2D Offline Engine...", error);
+                console.error("Primary 3D Context failed. Initiating 2D Vector Offline Engine...", error);
                 setup2DOfflineEngine();
             }
         }
 
-        // --- STREAMING_CHUNK: Constructing Fallback 2D Offline Game System ---
-        // Setup 2D neon vector graphic rendering engine
         function setup2DOfflineEngine() {
             GameState.isOfflineEngine = true;
             networkBadge.textContent = "OFFLINE INTEGRITY";
-            networkBadge.classList.replace("text-cyan-400", "text-yellow-500");
-            networkBadge.classList.replace("border-cyan-400/30", "border-yellow-500/30");
-            networkBadge.classList.replace("bg-cyan-900/50", "bg-yellow-950/40");
+            networkBadge.className = "text-[8px] md:text-xs font-bold tracking-widest px-1.5 py-0.5 rounded text-yellow-500 border border-yellow-500/30 bg-yellow-950/40";
             
             ctx2d = canvas.getContext('2d');
-            
-            // Adjust canvas to match device size
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Mimic start actions (PointerLock not required for top-down 2D vector view)
-            startBtn.addEventListener('click', () => {
-                startMenu.classList.add('hidden');
-                uiLayer.classList.remove('hidden');
-                GameState.isPlaying = true;
-            });
-
-            // Initialize identical coordinate map elements for the 2D arena
             spawnNodes(GameState.totalNodes);
             spawnAnomalies(15);
 
-            // Establish tracking mouse vector for 2D perspective aiming
             window.addEventListener('mousemove', (e) => {
                 mousePos.x = e.clientX;
                 mousePos.y = e.clientY;
             });
         }
 
-        // --- STREAMING_CHUNK: Mapping 3D Geometric Materials & Generators ---
         const materials = {
-            grid: new THREE.MeshBasicMaterial({ color: 0x00153a, wireframe: true }),
-            building: new THREE.MeshLambertMaterial({ color: 0x07070d }),
-            buildingNeon: new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35 }),
-            node: new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xbbbb00, roughness: 0.15 }),
-            anomaly: new THREE.MeshStandardMaterial({ color: 0xff0044, emissive: 0xbb0025, wireframe: true }),
-            bullet: new THREE.MeshBasicMaterial({ color: 0x00ffff }),
-            enemyBullet: new THREE.MeshBasicMaterial({ color: 0xff0044 }),
-            particle: new THREE.MeshBasicMaterial({ color: 0xff8800 }),
-            drone: new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x006666, roughness: 0.1 })
+            grid: typeof THREE !== 'undefined' ? new THREE.MeshBasicMaterial({ color: 0x00153a, wireframe: true }) : null,
+            building: typeof THREE !== 'undefined' ? new THREE.MeshLambertMaterial({ color: 0x07070d }) : null,
+            buildingNeon: typeof THREE !== 'undefined' ? new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35 }) : null,
+            node: typeof THREE !== 'undefined' ? new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xbbbb00, roughness: 0.15 }) : null,
+            anomaly: typeof THREE !== 'undefined' ? new THREE.MeshStandardMaterial({ color: 0xff0044, emissive: 0xbb0025, wireframe: true }) : null,
+            bullet: typeof THREE !== 'undefined' ? new THREE.MeshBasicMaterial({ color: 0x00ffff }) : null,
+            enemyBullet: typeof THREE !== 'undefined' ? new THREE.MeshBasicMaterial({ color: 0xff0044 }) : null,
+            particle: typeof THREE !== 'undefined' ? new THREE.MeshBasicMaterial({ color: 0xff8800 }) : null,
+            drone: typeof THREE !== 'undefined' ? new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x006666, roughness: 0.1 }) : null
         };
 
-        // Populate 3D Grid structures
         function generateCity3D() {
             const floorGeo = new THREE.PlaneGeometry(GameState.gridSize * GameState.cellSize, GameState.gridSize * GameState.cellSize, GameState.gridSize, GameState.gridSize);
             const floor = new THREE.Mesh(floorGeo, materials.grid);
@@ -791,7 +714,7 @@
                         line.position.copy(building.position);
                         scene.add(line);
 
-                        GameState.synthCityMap[x][z] = { exists: true, box: new THREE.Box3().setFromObject(building) };
+                        GameState.synthCityMap[x][z] = { exists: true };
                     } else {
                         GameState.synthCityMap[x][z] = { exists: false };
                     }
@@ -799,15 +722,12 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Controlling Node and Anomaly Spawning Systems ---
-        // Dynamically spawn Quantum Nodes on empty grid locations
         function spawnNodes(count) {
             const sphereGeo = typeof THREE !== 'undefined' ? new THREE.SphereGeometry(1.6, 16, 16) : null;
             const offset = (GameState.gridSize * GameState.cellSize) / 2;
             
             for (let i = 0; i < count; i++) {
-                let placed = false;
-                let attempts = 0;
+                let placed = false, attempts = 0;
                 while (!placed && attempts < 100) {
                     let rx = Math.floor(Math.random() * GameState.gridSize);
                     let rz = Math.floor(Math.random() * GameState.gridSize);
@@ -823,17 +743,9 @@
                             nodeMesh = new THREE.Mesh(sphereGeo, materials.node);
                             nodeMesh.position.set(px, 3.2, pz);
                             scene.add(nodeMesh);
-                            
-                            const nodeLight = new THREE.PointLight(0xffff00, 1.2, 35);
-                            nodeMesh.add(nodeLight);
+                            nodeMesh.add(new THREE.PointLight(0xffff00, 1.2, 35));
                         }
-
-                        // Maintain unified tracking matrix array
-                        GameState.nodes.push({
-                            mesh: nodeMesh,
-                            pos: { x: px, z: pz },
-                            active: true
-                        });
+                        GameState.nodes.push({ mesh: nodeMesh, pos: { x: px, z: pz }, active: true });
                         placed = true;
                     }
                     attempts++;
@@ -841,14 +753,12 @@
             }
         }
 
-        // Populate threat level anomalies
         function spawnAnomalies(count) {
             const geo = typeof THREE !== 'undefined' ? new THREE.OctahedronGeometry(1.5) : null;
             const offset = (GameState.gridSize * GameState.cellSize) / 2;
 
             for (let i = 0; i < count; i++) {
-                let placed = false;
-                let attempts = 0;
+                let placed = false, attempts = 0;
                 while (!placed && attempts < 100) {
                     let rx = Math.floor(Math.random() * GameState.gridSize);
                     let rz = Math.floor(Math.random() * GameState.gridSize);
@@ -868,8 +778,7 @@
 
                         const type = Math.random() > 0.65 ? 'shooter' : 'chaser';
                         GameState.anomalies.push({
-                            mesh: anomalyMesh,
-                            pos: { x: px, z: pz },
+                            mesh: anomalyMesh, pos: { x: px, z: pz },
                             type: type,
                             hp: type === 'shooter' ? 30 : 60,
                             maxHp: type === 'shooter' ? 30 : 60,
@@ -877,7 +786,6 @@
                             speed: type === 'shooter' ? 0.16 : 0.38,
                             id: Math.random().toString(36).substr(2, 9)
                         });
-                        
                         placed = true;
                     }
                     attempts++;
@@ -885,26 +793,19 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Implementing Combat Ballistics Logic ---
-        // Fire player tactical weapon module
         function fireWeapon() {
             if (!GameState.isPlaying) return;
-            
             const currTime = GameState.isOfflineEngine ? Date.now() / 1000 : clock.elapsedTime;
             if (currTime - lastFireTime < playerFireRate) return;
             lastFireTime = currTime;
 
             playSound('shoot');
 
-            const colorHex = PremiumState.plasmaRifle ? 0xa855f7 : 0x00ffff; // Upgrade changes projectile colors
             const damageVal = PremiumState.plasmaRifle ? 30 : 15;
 
             if (!GameState.isOfflineEngine) {
-                // 3D Ballistic physics
                 const bGeo = new THREE.BoxGeometry(0.25, 0.25, 3);
-                const bMat = PremiumState.plasmaRifle ? 
-                    new THREE.MeshBasicMaterial({ color: 0xa855f7 }) : materials.bullet;
-                
+                const bMat = PremiumState.plasmaRifle ? new THREE.MeshBasicMaterial({ color: 0xa855f7 }) : materials.bullet;
                 const bulletMesh = new THREE.Mesh(bGeo, bMat);
                 bulletMesh.position.copy(controls.getObject().position);
                 bulletMesh.quaternion.copy(camera.quaternion);
@@ -915,12 +816,9 @@
                     mesh: bulletMesh,
                     dir: new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize(),
                     pos: { x: bulletMesh.position.x, y: bulletMesh.position.y, z: bulletMesh.position.z },
-                    age: 0,
-                    damage: damageVal
+                    age: 0, damage: damageVal
                 });
             } else {
-                // 2D Ballistic physics
-                // Calculate trajectory towards pointer coordinates
                 const dx = mousePos.x - window.innerWidth / 2;
                 const dy = mousePos.y - window.innerHeight / 2;
                 const angle = Math.atan2(dy, dx);
@@ -928,27 +826,21 @@
                 bullets.push({
                     pos: { x: GameState.playerPos.x, z: GameState.playerPos.z },
                     dir: { x: Math.cos(angle), z: Math.sin(angle) },
-                    age: 0,
-                    damage: damageVal
+                    age: 0, damage: damageVal
                 });
             }
         }
 
-        // Fire Shooter Anomaly projectiles
         function fireEnemyWeapon(enemyObj, playerPosition) {
             const currTime = GameState.isOfflineEngine ? Date.now() / 1000 : clock.elapsedTime;
             if (currTime - enemyObj.lastShot < 2.2) return; 
             enemyObj.lastShot = currTime;
-            
             playSound('shoot');
 
             if (!GameState.isOfflineEngine) {
-                const geo = new THREE.SphereGeometry(0.45, 8, 8);
-                const bullet = new THREE.Mesh(geo, materials.enemyBullet);
-                
+                const bullet = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), materials.enemyBullet);
                 bullet.position.copy(enemyObj.mesh.position);
                 bullet.lookAt(playerPosition);
-                
                 scene.add(bullet);
                 enemyBullets.push({
                     mesh: bullet,
@@ -959,7 +851,6 @@
                 const dx = GameState.playerPos.x - enemyObj.pos.x;
                 const dz = GameState.playerPos.z - enemyObj.pos.z;
                 const len = Math.sqrt(dx*dx + dz*dz);
-                
                 enemyBullets.push({
                     pos: { x: enemyObj.pos.x, z: enemyObj.pos.z },
                     dir: { x: dx / len, z: dz / len },
@@ -968,126 +859,77 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Managing Collision Explosions and Particle FX ---
-        // Emit digital explosion sparks on entity elimination
         function createExplosion(posVector, customColorMat) {
             playSound('explosion');
-            
             const count = 15;
             if (!GameState.isOfflineEngine) {
                 const geo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
                 for (let i = 0; i < count; i++) {
                     const mesh = new THREE.Mesh(geo, customColorMat || materials.particle);
                     mesh.position.copy(posVector);
-                    
-                    const vel = new THREE.Vector3(
-                        (Math.random() - 0.5) * 25,
-                        (Math.random() - 0.5) * 25,
-                        (Math.random() - 0.5) * 25
-                    );
-                    
+                    const vel = new THREE.Vector3((Math.random()-0.5)*25, (Math.random()-0.5)*25, (Math.random()-0.5)*25);
                     scene.add(mesh);
                     particles.push({ mesh: mesh, velocity: vel, age: 0 });
                 }
             } else {
-                // 2D particle simulation
                 for (let i = 0; i < count; i++) {
-                    const vel = {
-                        x: (Math.random() - 0.5) * 350,
-                        z: (Math.random() - 0.5) * 350
-                    };
                     particles.push({
                         pos: { x: posVector.x, z: posVector.z },
-                        velocity: vel,
-                        age: 0,
-                        color: customColorMat === 'purple' ? '#a855f7' : '#ff5500'
+                        velocity: { x: (Math.random()-0.5)*350, z: (Math.random()-0.5)*350 },
+                        age: 0, color: customColorMat === 'purple' ? '#a855f7' : '#ff5500'
                     });
                 }
             }
         }
 
-        // --- STREAMING_CHUNK: Constructing Tactical Combat Drone Logic ---
-        // Drone execution code tracking target coordinates
         function runTacticalDrone(delta) {
             if (!PremiumState.droneCompanion || !GameState.isPlaying) return;
 
-            // Increment orbiting orbital parameters
             GameState.droneOrbitAngle += 2.0 * delta;
-            
             const orbitRadius = 4.5;
             const droneX = GameState.playerPos.x + Math.cos(GameState.droneOrbitAngle) * orbitRadius;
             const droneZ = GameState.playerPos.z + Math.sin(GameState.droneOrbitAngle) * orbitRadius;
             const droneY = GameState.isOfflineEngine ? 0 : 6.0 + Math.sin(GameState.droneOrbitAngle * 2.0) * 0.8;
 
-            // Render drone geometry in 3D
             if (!GameState.isOfflineEngine && scene) {
                 if (!GameState.droneMesh) {
-                    const droneGeo = new THREE.OctahedronGeometry(0.7, 0);
-                    GameState.droneMesh = new THREE.Mesh(droneGeo, materials.drone);
+                    GameState.droneMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.7, 0), materials.drone);
                     scene.add(GameState.droneMesh);
-                    
-                    const dLight = new THREE.PointLight(0x00ffff, 0.8, 15);
-                    GameState.droneMesh.add(dLight);
+                    GameState.droneMesh.add(new THREE.PointLight(0x00ffff, 0.8, 15));
                 }
                 GameState.droneMesh.position.set(droneX, droneY, droneZ);
                 GameState.droneMesh.rotation.y += 3.0 * delta;
             }
 
-            // Autonomous combat logic
             const currTime = GameState.isOfflineEngine ? Date.now() / 1000 : clock.elapsedTime;
             if (!GameState.lastDroneShot) GameState.lastDroneShot = 0;
 
             if (currTime - GameState.lastDroneShot > 1.4) {
-                // Discover closest active anomaly target
                 let closestEnemy = null;
                 let minDist = 45;
 
                 GameState.anomalies.forEach(enemy => {
                     const dist = Math.sqrt(Math.pow(enemy.pos.x - droneX, 2) + Math.pow(enemy.pos.z - droneZ, 2));
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closestEnemy = enemy;
-                    }
+                    if (dist < minDist) { minDist = dist; closestEnemy = enemy; }
                 });
 
                 if (closestEnemy) {
                     GameState.lastDroneShot = currTime;
                     playSound('shoot');
 
-                    // Fire tracking laser towards selected target coordinate
                     if (!GameState.isOfflineEngine) {
-                        // 3D Laser Trace Effect
-                        const points = [];
-                        points.push(new THREE.Vector3(droneX, droneY, droneZ));
-                        points.push(closestEnemy.mesh.position.clone());
-                        
-                        const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-                        const lineMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
-                        const laserLine = new THREE.Line(lineGeo, lineMat);
+                        const points = [new THREE.Vector3(droneX, droneY, droneZ), closestEnemy.mesh.position.clone()];
+                        const laserLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 }));
                         scene.add(laserLine);
-                        
-                        // Erase laser line after 120ms
                         setTimeout(() => scene.remove(laserLine), 120);
                     } else {
-                        // 2D Laser indicator tracker
-                        GameState.droneLaserTarget = {
-                            from: { x: droneX, z: droneZ },
-                            to: { x: closestEnemy.pos.x, z: closestEnemy.pos.z },
-                            age: 0
-                        };
+                        GameState.droneLaserTarget = { from: { x: droneX, z: droneZ }, to: { x: closestEnemy.pos.x, z: closestEnemy.pos.z }, age: 0 };
                     }
 
-                    // Apply laser impact modifications
                     closestEnemy.hp -= 20;
                     if (closestEnemy.hp <= 0) {
-                        const deathPos = GameState.isOfflineEngine ? 
-                            closestEnemy.pos : closestEnemy.mesh.position;
-                        
-                        createExplosion(deathPos, materials.particle);
-                        
-                        if (!GameState.isOfflineEngine) {
-                            scene.remove(closestEnemy.mesh);
-                        }
+                        createExplosion(GameState.isOfflineEngine ? closestEnemy.pos : closestEnemy.mesh.position, materials.particle);
+                        if (!GameState.isOfflineEngine) scene.remove(closestEnemy.mesh);
                         const index = GameState.anomalies.indexOf(closestEnemy);
                         if (index > -1) GameState.anomalies.splice(index, 1);
                     }
@@ -1095,46 +937,29 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Processing Input Handlers ---
         const onKeyDown = function (event) {
             if (document.activeElement === aiInput || document.activeElement === document.getElementById('wallet-key')) {
                 if (event.code === 'Enter' && document.activeElement === aiInput) processAICommand();
                 return;
             }
-
             switch (event.code) {
-                case 'ArrowUp':
-                case 'KeyW': moveForward = true; break;
-                case 'ArrowLeft':
-                case 'KeyA': moveLeft = true; break;
-                case 'ArrowDown':
-                case 'KeyS': moveBackward = true; break;
-                case 'ArrowRight':
-                case 'KeyD': moveRight = true; break;
+                case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                case 'ArrowRight': case 'KeyD': moveRight = true; break;
                 case 'Space': 
-                    if (canJump === true) {
-                        velocity.y += 36; 
-                        canJump = false;
-                        playSound('shoot');
-                    }
-                    break;
+                    if (canJump) { velocity.y += 36; canJump = false; playSound('shoot'); } break;
                 case 'ShiftLeft': isSprinting = true; break;
-                case 'Enter': 
-                    toggleAITerminal();
-                    break;
+                case 'Enter': toggleAITerminal(); break;
             }
         };
 
         const onKeyUp = function (event) {
             switch (event.code) {
-                case 'ArrowUp':
-                case 'KeyW': moveForward = false; break;
-                case 'ArrowLeft':
-                case 'KeyA': moveLeft = false; break;
-                case 'ArrowDown':
-                case 'KeyS': moveBackward = false; break;
-                case 'ArrowRight':
-                case 'KeyD': moveRight = false; break;
+                case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                case 'ArrowRight': case 'KeyD': moveRight = false; break;
                 case 'ShiftLeft': isSprinting = false; break;
             }
         };
@@ -1143,12 +968,9 @@
         document.addEventListener('keyup', onKeyUp);
         
         document.addEventListener('mousedown', (e) => {
-            if (e.button === 0 && GameState.isPlaying && (GameState.isOfflineEngine || (controls && controls.isLocked))) {
-                fireWeapon();
-            }
+            if (e.button === 0 && GameState.isPlaying && (GameState.isOfflineEngine || (controls && controls.isLocked))) fireWeapon();
         });
 
-        // --- STREAMING_CHUNK: Setting Up Virtual Touch Controls ---
         if (isTouchDevice) {
             const joystickZone = document.getElementById('joystick-zone');
             const joystickKnob = document.getElementById('joystick-knob');
@@ -1180,12 +1002,7 @@
                 let dx = touch.clientX - joyCenterX;
                 let dy = touch.clientY - joyCenterY;
                 const distance = Math.sqrt(dx*dx + dy*dy);
-                
-                if (distance > maxJoyRadius) {
-                    dx = (dx/distance) * maxJoyRadius;
-                    dy = (dy/distance) * maxJoyRadius;
-                }
-                
+                if (distance > maxJoyRadius) { dx = (dx/distance) * maxJoyRadius; dy = (dy/distance) * maxJoyRadius; }
                 joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
                 joyX = dx / maxJoyRadius;
                 joyY = dy / maxJoyRadius;
@@ -1194,7 +1011,6 @@
             document.addEventListener('touchstart', (e) => {
                 if (!GameState.isPlaying) return;
                 if (e.target.closest('#mobile-controls') || e.target.closest('.glass-panel') || e.target.closest('#premium-shop') || e.target.closest('#checkout-modal')) return;
-                
                 isLooking = true;
                 touchLookX = e.touches[0].clientX;
                 touchLookY = e.touches[0].clientY;
@@ -1202,92 +1018,63 @@
 
             document.addEventListener('touchmove', (e) => {
                 if (!isLooking || !GameState.isPlaying) return;
-                if (e.target !== aiInput) e.preventDefault(); 
+                if (e.target === aiInput) return; // Permit scrolling in AI text field
+                e.preventDefault(); 
 
                 let touch = Array.from(e.touches).find(t => t.clientX > window.innerWidth / 3) || e.touches[0];
                 if (!touch) return;
 
-                let deltaX = touch.clientX - touchLookX;
-                let deltaY = touch.clientY - touchLookY;
-                
-                touchLookX = touch.clientX;
-                touchLookY = touch.clientY;
+                if (GameState.isOfflineEngine) {
+                    mousePos.x = touch.clientX;
+                    mousePos.y = touch.clientY;
+                } else if (camera) {
+                    let deltaX = touch.clientX - touchLookX;
+                    let deltaY = touch.clientY - touchLookY;
+                    touchLookX = touch.clientX;
+                    touchLookY = touch.clientY;
 
-                if (!GameState.isOfflineEngine && camera) {
                     const euler = new THREE.Euler(0, 0, 0, 'YXZ');
                     euler.setFromQuaternion(camera.quaternion);
-                    
                     euler.y -= deltaX * 0.0045; 
                     euler.x -= deltaY * 0.0045; 
                     euler.x = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, euler.x));
-                    
                     camera.quaternion.setFromEuler(euler);
                 }
             }, {passive: false});
 
             document.addEventListener('touchend', () => { isLooking = false; });
 
-            // Button mappings
-            const btnJump = document.getElementById('mobile-jump');
-            const btnSprint = document.getElementById('mobile-sprint');
-            const btnShoot = document.getElementById('mobile-shoot');
-            
-            btnJump.addEventListener('touchstart', (e) => {
+            document.getElementById('mobile-jump').addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                if (canJump === true) velocity.y += 35; canJump = false;
+                if (canJump) { velocity.y += 35; canJump = false; }
             });
-            
-            btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; });
-            btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; });
-            
-            btnShoot.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                fireWeapon();
-            });
+            document.getElementById('mobile-sprint').addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; });
+            document.getElementById('mobile-sprint').addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; });
+            document.getElementById('mobile-shoot').addEventListener('touchstart', (e) => { e.preventDefault(); fireWeapon(); });
         }
 
-        // --- STREAMING_CHUNK: Resolving Bounds Collisions ---
         function checkCollisions(posVector) {
             const offset = (GameState.gridSize * GameState.cellSize) / 2;
             const gx = Math.floor((posVector.x + offset) / GameState.cellSize);
             const gz = Math.floor((posVector.z + offset) / GameState.cellSize);
-
             if (gx >= 0 && gx < GameState.gridSize && gz >= 0 && gz < GameState.gridSize) {
-                const mapCell = GameState.synthCityMap[gx] ? GameState.synthCityMap[gx][gz] : null;
-                if (mapCell && mapCell.exists) {
-                    return true; 
-                }
-            } else {
-                return true; 
+                return GameState.synthCityMap[gx] && GameState.synthCityMap[gx][gz] && GameState.synthCityMap[gx][gz].exists;
             }
-            return false;
+            return true; 
         }
 
-        // --- STREAMING_CHUNK: Orchestrating Offline NLP Rules Engine ---
-        // Rule-Based offline linguistic analysis backup model
         function parseOfflineNLP(rawText) {
             const normalized = rawText.toLowerCase();
-            let intent = "UNKNOWN";
-            let reply = "Processing command in backup offline mode.";
+            let intent = "UNKNOWN", reply = "Processing command in backup offline mode.";
 
-            if (normalized.includes("heal") || normalized.includes("repair") || normalized.includes("shield") || normalized.includes("health")) {
-                intent = "HEAL";
-                reply = "Biometric backup loops triggered. Nanite injection operating.";
-            } else if (normalized.includes("nuke") || normalized.includes("kill") || normalized.includes("destroy") || normalized.includes("purge")) {
-                intent = "NUKE";
-                reply = "Releasing high-voltage network surge on localized anomaly coordinates.";
-            } else if (normalized.includes("scan") || normalized.includes("find") || normalized.includes("locate") || normalized.includes("where")) {
-                intent = "SCAN";
-                reply = "Scanning localized sector grid database. Nodes highlighted.";
-            } else if (normalized.includes("jump") || normalized.includes("fly") || normalized.includes("boost") || normalized.includes("high")) {
-                intent = "JUMP";
-                reply = "Maximizing backup anti-grav thrust injectors now.";
-            }
+            if (normalized.match(/heal|repair|shield|health/)) { intent = "HEAL"; reply = "Biometric backup loops triggered. Nanite injection operating."; }
+            else if (normalized.match(/nuke|kill|destroy|purge/)) { intent = "NUKE"; reply = "Releasing high-voltage network surge on localized anomaly coordinates."; }
+            else if (normalized.match(/scan|find|locate|where/)) { intent = "SCAN"; reply = "Scanning localized sector grid database. Nodes highlighted."; }
+            else if (normalized.match(/jump|fly|boost|high/)) { intent = "JUMP"; reply = "Maximizing backup anti-grav thrust injectors now."; }
 
             return { intent, reply };
         }
 
-        // --- STREAMING_CHUNK: Managing Chat Logs and AI Submits ---
         function addChatMessage(speaker, text, isSystem = false) {
             const msgDiv = document.createElement('div');
             let color = speaker === 'Player' ? 'text-white' : 'text-cyan-300';
@@ -1302,10 +1089,10 @@
         function toggleAITerminal(forceClose = false) {
             if (forceClose || !aiTerminal.classList.contains('hidden')) {
                 aiTerminal.classList.add('hidden');
-                if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls) controls.lock();
+                if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls && !controls.isLocked) controls.lock();
             } else {
                 aiTerminal.classList.remove('hidden');
-                premiumShop.classList.add('hidden'); // Close shop if open
+                premiumShop.classList.add('hidden'); 
                 if (!isTouchDevice && !GameState.isOfflineEngine && controls) document.exitPointerLock();
                 setTimeout(() => aiInput.focus(), 60);
             }
@@ -1315,7 +1102,6 @@
         aiCloseBtn.addEventListener('click', () => toggleAITerminal(true));
         aiSendBtn.addEventListener('click', processAICommand);
 
-        // Process linguistic instructions
         async function processAICommand() {
             const rawText = aiInput.value.trim();
             if (!rawText) return;
@@ -1323,14 +1109,11 @@
             addChatMessage('Player', rawText);
             aiInput.value = '';
             aiInput.blur();
-            
             aiProcessing.classList.remove('hidden');
 
-            // Detect offline status
             const isOffline = !navigator.onLine;
 
             if (isOffline) {
-                // Execute rule-based offline NLP
                 setTimeout(() => {
                     const result = parseOfflineNLP(rawText);
                     executeAIAction(result.intent, result.reply);
@@ -1339,29 +1122,21 @@
                 return;
             }
 
-            // Normal online flow utilizing Gemini models
             const systemPrompt = `You are Chanakya-Core, an AI assistant in a cyberpunk game. 
-            Analyze the player's command: "${rawText}".
-            Determine their intent from this strict list: [HEAL, NUKE, SCAN, JUMP].
-            Respond ONLY with a JSON object format: {"intent": "THE_INTENT", "reply": "A brief, immersive cyberpunk response"}.
-            If it matches nothing, use intent UNKNOWN.`;
+            Analyze command: "${rawText}". Determine intent from: [HEAL, NUKE, SCAN, JUMP].
+            Respond ONLY with a JSON object: {"intent": "THE_INTENT", "reply": "Cyberpunk response"}.
+            If no match, use intent UNKNOWN.`;
 
             try {
-                const apiKey = ""; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const apiKey = ""; // Kept structurally intact to fall back gracefully without exposure
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
                 
-                const payload = {
-                    contents: [{ parts: [{ text: systemPrompt }] }],
-                    generationConfig: { responseMimeType: "application/json" }
-                };
-
                 const res = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }], generationConfig: { responseMimeType: "application/json" } })
                 });
 
-                if (!res.ok) throw new Error("Fallback required");
+                if (!res.ok) throw new Error("API Limit / No Key -> Fallback");
                 
                 const data = await res.json();
                 const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1369,33 +1144,23 @@
                 if (textOutput) {
                     const parsed = JSON.parse(textOutput);
                     executeAIAction(parsed.intent, parsed.reply);
-                } else {
-                    throw new Error("Invalid format");
-                }
+                } else throw new Error("Invalid format");
             } catch (err) {
-                // Smooth local fallback on network error/interruption
                 const backup = parseOfflineNLP(rawText);
                 executeAIAction(backup.intent, backup.reply);
             } finally {
                 aiProcessing.classList.add('hidden');
-                if (!PremiumState.chanakyaPro) {
-                    // Close auto-panel after 3s if standard tier
-                    setTimeout(() => toggleAITerminal(true), 3500);
-                }
+                if (!PremiumState.chanakyaPro) setTimeout(() => toggleAITerminal(true), 3500);
             }
         }
 
-        // --- STREAMING_CHUNK: Executing Parser Intents ---
         function executeAIAction(intent, reply) {
             addChatMessage('Chanakya', reply);
             playSound('ai_success');
             
             switch (intent) {
                 case 'HEAL':
-                    // Recharge Shield if Shield upgraded, otherwise restore HP
-                    if (PremiumState.quantumShield) {
-                        GameState.shield = Math.min(GameState.maxShield, GameState.shield + 25);
-                    }
+                    if (PremiumState.quantumShield) GameState.shield = Math.min(GameState.maxShield, GameState.shield + 25);
                     GameState.health = Math.min(GameState.maxHealth, GameState.health + 45);
                     updateUI();
                     showNotification("INTEGRITY SECURED", "Chanakya nanites repaired grid matrix.");
@@ -1406,11 +1171,8 @@
                         const target = GameState.anomalies[i];
                         const d = Math.sqrt(Math.pow(target.pos.x - GameState.playerPos.x, 2) + Math.pow(target.pos.z - GameState.playerPos.z, 2));
                         if (d < 160) {
-                            const posVec = GameState.isOfflineEngine ? target.pos : target.mesh.position;
-                            createExplosion(posVec, materials.particle);
-                            if (!GameState.isOfflineEngine) {
-                                scene.remove(target.mesh);
-                            }
+                            createExplosion(GameState.isOfflineEngine ? target.pos : target.mesh.position, materials.particle);
+                            if (!GameState.isOfflineEngine) scene.remove(target.mesh);
                             GameState.anomalies.splice(i, 1);
                             destroyed++;
                         }
@@ -1436,80 +1198,52 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Processing Premium Shop Controls ---
         shopToggleBtn.addEventListener('click', () => {
             if (!premiumShop.classList.contains('hidden')) {
                 premiumShop.classList.add('hidden');
-                if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls) controls.lock();
+                if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls && !controls.isLocked) controls.lock();
             } else {
                 premiumShop.classList.remove('hidden');
-                aiTerminal.classList.add('hidden'); // Close AI if open
+                aiTerminal.classList.add('hidden'); 
                 if (!isTouchDevice && !GameState.isOfflineEngine && controls) document.exitPointerLock();
             }
         });
 
         shopCloseBtn.addEventListener('click', () => {
             premiumShop.classList.add('hidden');
-            if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls) controls.lock();
+            if (GameState.isPlaying && !isTouchDevice && !GameState.isOfflineEngine && controls && !controls.isLocked) controls.lock();
         });
 
-        // Currency tab change
         currencyTabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 currencyTabs.forEach(t => t.className = "currency-tab text-[9px] font-bold px-1.5 py-0.5 rounded text-gray-400 hover:text-white");
                 tab.className = "currency-tab text-[9px] font-bold px-1.5 py-0.5 rounded text-yellow-400 bg-yellow-950/60 border border-yellow-500/30";
+                PremiumState.currency = tab.getAttribute('data-cur');
                 
-                const cur = tab.getAttribute('data-cur');
-                PremiumState.currency = cur;
-                updatePricingDisplays();
+                document.querySelectorAll('.item-price').forEach(el => {
+                    if (PremiumState.currency === 'USD') el.textContent = `$${el.getAttribute('data-usd')}`;
+                    else if (PremiumState.currency === 'GBP') el.textContent = `£${el.getAttribute('data-gbp')}`;
+                    else if (PremiumState.currency === 'CHF') el.textContent = `${el.getAttribute('data-chf')} CHF`;
+                });
             });
         });
 
-        function updatePricingDisplays() {
-            const priceElements = document.querySelectorAll('.item-price');
-            priceElements.forEach(el => {
-                const usd = el.getAttribute('data-usd');
-                const gbp = el.getAttribute('data-gbp');
-                const chf = el.getAttribute('data-chf');
-                
-                if (PremiumState.currency === 'USD') el.textContent = `$${usd}`;
-                else if (PremiumState.currency === 'GBP') el.textContent = `£${gbp}`;
-                else if (PremiumState.currency === 'CHF') el.textContent = `${chf} CHF`;
-            });
-        }
-
-        // Buy button bindings
         let activeCheckoutItem = null;
-        const buyButtons = document.querySelectorAll('.buy-btn');
-        buyButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const itemId = btn.getAttribute('data-item');
-                initiateCheckout(itemId);
-            });
+        document.querySelectorAll('.buy-btn').forEach(btn => {
+            btn.addEventListener('click', () => initiateCheckout(btn.getAttribute('data-item')));
         });
 
-        // --- STREAMING_CHUNK: Designing Checkout Gateway Mechanics ---
         function initiateCheckout(item) {
             activeCheckoutItem = item;
-            let pName = "";
-            let pPrice = "";
+            const prices = {
+                'plasma': {n: "Hyper Plasma Caster Upgrade", u: '$4.99', g: '£3.99', c: '4.50 CHF'},
+                'drone': {n: "Tactical Cyber Drone Companion", u: '$5.99', g: '£4.99', c: '5.50 CHF'},
+                'shield': {n: "Quantum Shield Core Mod", u: '$2.99', g: '£2.49', c: '2.70 CHF'},
+                'pro': {n: "Chanakya Core Pro (1-Month)", u: '$9.99/mo', g: '£7.99/mo', c: '9.00 CHF/mo'}
+            };
 
-            if (item === 'plasma') {
-                pName = "Hyper Plasma Caster Upgrade";
-                pPrice = PremiumState.currency === 'USD' ? '$4.99' : (PremiumState.currency === 'GBP' ? '£3.99' : '4.50 CHF');
-            } else if (item === 'drone') {
-                pName = "Tactical Cyber Drone Companion";
-                pPrice = PremiumState.currency === 'USD' ? '$5.99' : (PremiumState.currency === 'GBP' ? '£4.99' : '5.50 CHF');
-            } else if (item === 'shield') {
-                pName = "Quantum Shield Core Mod";
-                pPrice = PremiumState.currency === 'USD' ? '$2.99' : (PremiumState.currency === 'GBP' ? '£2.49' : '2.70 CHF');
-            } else if (item === 'pro') {
-                pName = "Chanakya Core Pro (1-Month Licensing)";
-                pPrice = PremiumState.currency === 'USD' ? '$9.99/mo' : (PremiumState.currency === 'GBP' ? '£7.99/mo' : '9.00 CHF/mo');
-            }
-
-            shopProductName.textContent = pName;
-            shopProductPrice.textContent = pPrice;
+            shopProductName.textContent = prices[item].n;
+            shopProductPrice.textContent = PremiumState.currency === 'USD' ? prices[item].u : (PremiumState.currency === 'GBP' ? prices[item].g : prices[item].c);
             shopProductCurrency.textContent = PremiumState.currency;
             
             checkoutModal.classList.remove('hidden');
@@ -1523,18 +1257,16 @@
 
         approveCheckoutBtn.addEventListener('click', () => {
             checkoutProcessing.classList.remove('hidden');
-            
             const logSteps = [
-                "> SECURING DIRECT LINK WITH SWISS MATRIX DEBIT CORE...",
+                "> SECURING DIRECT LINK WITH MATRIX DEBIT CORE...",
                 `> AUTHORIZING BIOMETRIC TRANSACTION (${shopProductPrice.textContent})...`,
                 "> REPLICATING QUANTUM FIRMWARE ENVELOPE...",
-                "> INJECTING UPLINK PERK DATA INTO THE SYNTH-CORE MASTERBOARD...",
+                "> INJECTING UPLINK PERK DATA INTO MASTERBOARD...",
                 "> SECURED. TRANSACTION VALIDATED!"
             ];
 
             processingLog.innerHTML = "";
             let step = 0;
-
             function runStep() {
                 if (step < logSteps.length) {
                     const p = document.createElement('p');
@@ -1554,12 +1286,11 @@
             runStep();
         });
 
-        // Apply Premium upgrade perks instantly to runtime state
         function applyPremiumPurchase(item) {
             playSound('ai_success');
             if (item === 'plasma') {
                 PremiumState.plasmaRifle = true;
-                playerFireRate = 0.07; // Machine gun rate
+                playerFireRate = 0.07;
                 showNotification("ARMAMENT RECONFIGURED", "Hyper Plasma Caster active. Output maximized.");
             } else if (item === 'drone') {
                 PremiumState.droneCompanion = true;
@@ -1573,11 +1304,10 @@
                 showNotification("SHIELD MATRICES LOADED", "Shield core integrated. Damage protection boosted.");
             } else if (item === 'pro') {
                 PremiumState.chanakyaPro = true;
-                showNotification("AI LICENSING ACTIVE", "Chanakya-Core Pro subscription active. Terminal limits removed.");
+                showNotification("AI LICENSING ACTIVE", "Chanakya-Core Pro active. Terminal limits removed.");
             }
         }
 
-        // --- STREAMING_CHUNK: Managing HUD Notifications ---
         function showNotification(title, desc) {
             notifTitle.textContent = title;
             notifDesc.textContent = desc;
@@ -1585,10 +1315,9 @@
             setTimeout(() => notifCenter.classList.add('opacity-0'), 4500);
         }
 
-        // Refresh UI Bars and Values
         function updateUI() {
             const hPct = (GameState.health / GameState.maxHealth) * 100;
-            healthBar.style.width = hPct + '%';
+            healthBar.style.width = Math.max(0, hPct) + '%';
             
             if (hPct > 50) {
                 healthBar.className = "h-full w-full shadow-[0_0_10px_#00ffff] transition-all duration-300 bg-cyan-400";
@@ -1604,16 +1333,13 @@
                 healthText.style.color = '#ff0000';
             }
 
-            // Shield matrix tracking updates
             if (PremiumState.quantumShield) {
-                const sPct = (GameState.shield / GameState.maxShield) * 100;
-                shieldBar.style.width = sPct + '%';
+                shieldBar.style.width = Math.max(0, (GameState.shield / GameState.maxShield) * 100) + '%';
             }
 
             scoreText.textContent = `${GameState.nodesSecured} / ${GameState.totalNodes}`;
             levelText.textContent = GameState.level;
             
-            // INFINITE ESCALATING MULTIPLIER RULES
             if (GameState.nodesSecured >= GameState.totalNodes) {
                 GameState.level++;
                 GameState.totalNodes += 5; 
@@ -1624,70 +1350,48 @@
                 spawnNodes(5); 
                 spawnAnomalies(3 + GameState.level * 2); 
                 
-                // Integrity bonus on tier transition
                 GameState.health = Math.min(GameState.maxHealth, GameState.health + 30);
-                if (PremiumState.quantumShield) {
-                    GameState.shield = Math.min(GameState.maxShield, GameState.shield + 20);
-                }
+                if (PremiumState.quantumShield) GameState.shield = Math.min(GameState.maxShield, GameState.shield + 20);
                 updateUI();
             }
             
             if (GameState.health <= 0) {
-                showNotification("CONNECTION TERMINATED", `Sector link collapsed. Reached Sector Tier ${GameState.level}. Rebooting matrix...`);
+                showNotification("CONNECTION TERMINATED", `Sector link collapsed. Reached Sector Tier ${GameState.level}. Rebooting...`);
                 GameState.isPlaying = false;
-                if (!GameState.isOfflineEngine && controls) controls.unlock();
+                if (!GameState.isOfflineEngine && controls) document.exitPointerLock();
                 setTimeout(() => { location.reload(); }, 4000);
             }
         }
 
-        // --- STREAMING_CHUNK: Running Master Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
-
             if (!GameState.isPlaying) return;
-
-            // Choose operational loop engine dynamically
-            if (!GameState.isOfflineEngine) {
-                run3DGameLoop();
-            } else {
-                run2DOfflineLoop();
-            }
+            if (!GameState.isOfflineEngine) run3DGameLoop();
+            else run2DOfflineLoop();
         }
 
-        // --- STREAMING_CHUNK: Implementing Primary 3D Loop ---
         function run3DGameLoop() {
             const delta = clock.getDelta();
             const playerObj = controls.getObject();
             const currentPos = playerObj.position.clone();
 
-            // Store current coordinate trackers globally
             GameState.playerPos.x = playerObj.position.x;
             GameState.playerPos.y = playerObj.position.y;
             GameState.playerPos.z = playerObj.position.z;
 
-            // --- Physics calculations ---
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
             velocity.y -= 9.8 * mass * delta; 
 
             let inputZ = Number(moveForward) - Number(moveBackward);
             let inputX = Number(moveRight) - Number(moveLeft);
-
-            if (isTouchDevice) {
-                inputZ += joyY; 
-                inputX += joyX; 
-            }
+            if (isTouchDevice) { inputZ += joyY; inputX += joyX; }
 
             direction.z = inputZ;
             direction.x = inputX;
+            if (direction.lengthSq() > 0) direction.normalize();
 
-            if (direction.lengthSq() > 0) {
-                direction.normalize();
-            }
-
-            const speed = isSprinting ? 650.0 : 320.0;
-            let finalSpeed = speed;
-
+            let finalSpeed = isSprinting ? 650.0 : 320.0;
             if (isTouchDevice) {
                 const joyMagnitude = Math.min(1, Math.sqrt(joyX*joyX + joyY*joyY));
                 if (joyMagnitude > 0) finalSpeed *= joyMagnitude;
@@ -1705,24 +1409,16 @@
             }
 
             playerObj.position.y += (velocity.y * delta); 
+            if (playerObj.position.y < 5.0) { velocity.y = 0; playerObj.position.y = 5.0; canJump = true; }
 
-            if (playerObj.position.y < 5.0) {
-                velocity.y = 0;
-                playerObj.position.y = 5.0;
-                canJump = true;
-            }
-
-            // Run premium drone companion
             runTacticalDrone(delta);
 
-            // --- Ballistic loops ---
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
                 b.mesh.translateZ(-140 * delta); 
                 b.age += delta;
 
                 let hit = false;
-                
                 for (let j = GameState.anomalies.length - 1; j >= 0; j--) {
                     let enemy = GameState.anomalies[j];
                     if (b.mesh.position.distanceTo(enemy.mesh.position) < 2.5) {
@@ -1740,11 +1436,7 @@
                         break; 
                     }
                 }
-
-                if (hit || b.age > 1.8) {
-                    scene.remove(b.mesh);
-                    bullets.splice(i, 1);
-                }
+                if (hit || b.age > 1.8) { scene.remove(b.mesh); bullets.splice(i, 1); }
             }
 
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
@@ -1753,28 +1445,18 @@
                 eb.age += delta;
 
                 if (eb.mesh.position.distanceTo(playerObj.position) < 2.2) {
-                    // Apply Shield absorption first if equipped
                     const dDamage = 14 + (GameState.level * 2);
-                    if (PremiumState.quantumShield && GameState.shield > 0) {
-                        GameState.shield = Math.max(0, GameState.shield - dDamage);
-                    } else {
-                        GameState.health -= dDamage;
-                    }
+                    if (PremiumState.quantumShield && GameState.shield > 0) GameState.shield = Math.max(0, GameState.shield - dDamage);
+                    else GameState.health -= dDamage;
 
-                    updateUI();
-                    playSound('damage');
+                    updateUI(); playSound('damage');
                     uiLayer.style.opacity = 0.5;
                     setTimeout(() => uiLayer.style.opacity = 1, 200);
                     
-                    scene.remove(eb.mesh);
-                    enemyBullets.splice(i, 1);
+                    scene.remove(eb.mesh); enemyBullets.splice(i, 1);
                     continue;
                 }
-
-                if (eb.age > 3.2) {
-                    scene.remove(eb.mesh);
-                    enemyBullets.splice(i, 1);
-                }
+                if (eb.age > 3.2) { scene.remove(eb.mesh); enemyBullets.splice(i, 1); }
             }
 
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -1782,48 +1464,33 @@
                 p.mesh.position.addScaledVector(p.velocity, delta);
                 p.mesh.scale.multiplyScalar(0.92); 
                 p.age += delta;
-                if (p.age > 0.5) {
-                    scene.remove(p.mesh);
-                    particles.splice(i, 1);
-                }
+                if (p.age > 0.5) { scene.remove(p.mesh); particles.splice(i, 1); }
             }
 
-            // --- Enemy AI Tracking Loops ---
             for (let i = GameState.anomalies.length - 1; i >= 0; i--) {
                 let anomaly = GameState.anomalies[i];
                 let mesh = anomaly.mesh;
                 
-                mesh.rotation.x += 0.01;
-                mesh.rotation.y += 0.02;
-
+                mesh.rotation.x += 0.01; mesh.rotation.y += 0.02;
                 const dist = mesh.position.distanceTo(playerObj.position);
                 
-                // Sync updated positions back to master tracking array
-                anomaly.pos.x = mesh.position.x;
-                anomaly.pos.z = mesh.position.z;
+                anomaly.pos.x = mesh.position.x; anomaly.pos.z = mesh.position.z;
 
                 if (anomaly.type === 'chaser') {
-                    if (dist < (60 + GameState.level * 5)) {
-                        mesh.position.lerp(playerObj.position, delta * (anomaly.speed + (GameState.level * 0.04)));
-                    }
+                    if (dist < (60 + GameState.level * 5)) mesh.position.lerp(playerObj.position, delta * (anomaly.speed + (GameState.level * 0.04)));
                     if (dist < 3.0) {
                         const tickDmg = (15 + GameState.level * 2) * delta;
-                        if (PremiumState.quantumShield && GameState.shield > 0) {
-                            GameState.shield = Math.max(0, GameState.shield - tickDmg);
-                        } else {
-                            GameState.health -= tickDmg;
-                        }
+                        if (PremiumState.quantumShield && GameState.shield > 0) GameState.shield = Math.max(0, GameState.shield - tickDmg);
+                        else GameState.health -= tickDmg;
 
                         updateUI();
                         uiLayer.style.opacity = Math.random() > 0.5 ? 0.85 : 1.0;
                         if (Math.random() < 0.1) playSound('damage');
                     }
                 } else if (anomaly.type === 'shooter') {
-                    if (dist < 45 && dist > 18) {
-                        fireEnemyWeapon(anomaly, playerObj.position);
-                    } else if (dist > 45 && dist < (80 + GameState.level * 5)) {
-                        mesh.position.lerp(playerObj.position, delta * anomaly.speed);
-                    } else if (dist <= 18) {
+                    if (dist < 45 && dist > 18) fireEnemyWeapon(anomaly, playerObj.position);
+                    else if (dist > 45 && dist < (80 + GameState.level * 5)) mesh.position.lerp(playerObj.position, delta * anomaly.speed);
+                    else if (dist <= 18) {
                         const dir = new THREE.Vector3().subVectors(mesh.position, playerObj.position).normalize();
                         mesh.position.addScaledVector(dir, delta * 12);
                     }
@@ -1834,23 +1501,16 @@
                 if (uiLayer.style.opacity !== 1.0) uiLayer.style.opacity = 1.0;
             }
 
-            // Node intersection
             GameState.nodes.forEach(nodeObj => {
                 if (nodeObj.active) {
                     nodeObj.mesh.rotation.y += 0.015;
                     nodeObj.mesh.position.y = 3.2 + Math.sin(clock.elapsedTime * 2) * 0.45;
-
                     if (playerObj.position.distanceTo(nodeObj.mesh.position) < 3.8) {
-                        nodeObj.active = false;
-                        scene.remove(nodeObj.mesh);
-                        GameState.nodesSecured++;
-                        playSound('node');
+                        nodeObj.active = false; scene.remove(nodeObj.mesh);
+                        GameState.nodesSecured++; playSound('node');
                         GameState.health = Math.min(GameState.maxHealth, GameState.health + 12);
-                        if (PremiumState.quantumShield) {
-                            GameState.shield = Math.min(GameState.maxShield, GameState.shield + 10);
-                        }
-                        updateUI();
-                        showNotification("NODE SYNCHRONIZED", "Core network loop operating normally.");
+                        if (PremiumState.quantumShield) GameState.shield = Math.min(GameState.maxShield, GameState.shield + 10);
+                        updateUI(); showNotification("NODE SYNCHRONIZED", "Core network loop operating normally.");
                     }
                 }
             });
@@ -1858,185 +1518,120 @@
             renderer.render(scene, camera);
         }
 
-        // --- STREAMING_CHUNK: Implementing Fallback 2D Offline Game Loop ---
-        // Top-Down vector tactical game loop running 100% offline
         function run2DOfflineLoop() {
             const now = Date.now();
-            const delta = 0.016; // Simulated fixed ticks
+            const delta = 0.016; 
 
-            // --- Physics & Coordinates ---
             let inputX = Number(moveRight) - Number(moveLeft);
             let inputZ = Number(moveBackward) - Number(moveForward);
-
-            if (isTouchDevice) {
-                inputX += joyX;
-                inputZ += joyY;
-            }
+            if (isTouchDevice) { inputX += joyX; inputZ += joyY; }
 
             const moveSpeed = isSprinting ? 220 : 120;
             GameState.playerPos.x += inputX * moveSpeed * delta;
             GameState.playerPos.z += inputZ * moveSpeed * delta;
 
-            // Grid edge containment checks
             const mapBoundary = (GameState.gridSize * GameState.cellSize) / 2;
             GameState.playerPos.x = Math.max(-mapBoundary, Math.min(mapBoundary, GameState.playerPos.x));
             GameState.playerPos.z = Math.max(-mapBoundary, Math.min(mapBoundary, GameState.playerPos.z));
 
-            // Execute tactical helper drone companions
             runTacticalDrone(delta);
 
-            // --- Clear and draw frame on Canvas context ---
             ctx2d.fillStyle = '#020208';
             ctx2d.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Translate matrix to draw map relative to center player coordinates
             ctx2d.save();
             ctx2d.translate(canvas.width / 2, canvas.height / 2);
 
-            // Draw vector cyber floor grid lines
             ctx2d.strokeStyle = '#001a35';
             ctx2d.lineWidth = 1;
             const drawOffset = GameState.cellSize;
-
             for (let x = -mapBoundary; x <= mapBoundary; x += drawOffset) {
-                // Vertical lines
                 ctx2d.beginPath();
                 ctx2d.moveTo(x - GameState.playerPos.x, -mapBoundary - GameState.playerPos.z);
                 ctx2d.lineTo(x - GameState.playerPos.x, mapBoundary - GameState.playerPos.z);
                 ctx2d.stroke();
 
-                // Horizontal lines
                 ctx2d.beginPath();
                 ctx2d.moveTo(-mapBoundary - GameState.playerPos.x, x - GameState.playerPos.z);
                 ctx2d.lineTo(mapBoundary - GameState.playerPos.x, x - GameState.playerPos.z);
                 ctx2d.stroke();
             }
 
-            // Draw Grid Boundaries
             ctx2d.strokeStyle = '#ff0055';
             ctx2d.lineWidth = 3;
             ctx2d.strokeRect(-mapBoundary - GameState.playerPos.x, -mapBoundary - GameState.playerPos.z, mapBoundary * 2, mapBoundary * 2);
 
-            // Draw Nodes (Yellow pulsing neon dots)
             GameState.nodes.forEach(node => {
                 if (node.active) {
                     const nodeX = node.pos.x - GameState.playerPos.x;
                     const nodeZ = node.pos.z - GameState.playerPos.z;
 
-                    // Neon shadow glow simulation
-                    ctx2d.shadowBlur = 12;
-                    ctx2d.shadowColor = '#ffff00';
-                    ctx2d.fillStyle = '#ffff00';
-                    
-                    const pulseRadius = 5.5 + Math.sin(now / 150) * 1.5;
-                    ctx2d.beginPath();
-                    ctx2d.arc(nodeX, nodeZ, pulseRadius, 0, Math.PI * 2);
-                    ctx2d.fill();
+                    ctx2d.shadowBlur = 12; ctx2d.shadowColor = '#ffff00'; ctx2d.fillStyle = '#ffff00';
+                    ctx2d.beginPath(); ctx2d.arc(nodeX, nodeZ, 5.5 + Math.sin(now / 150) * 1.5, 0, Math.PI * 2); ctx2d.fill();
 
-                    // Collision check
-                    const dist = Math.sqrt(nodeX*nodeX + nodeZ*nodeZ);
-                    if (dist < 18) {
-                        node.active = false;
-                        GameState.nodesSecured++;
-                        playSound('node');
+                    if (Math.sqrt(nodeX*nodeX + nodeZ*nodeZ) < 18) {
+                        node.active = false; GameState.nodesSecured++; playSound('node');
                         GameState.health = Math.min(GameState.maxHealth, GameState.health + 15);
-                        if (PremiumState.quantumShield) {
-                            GameState.shield = Math.min(GameState.maxShield, GameState.shield + 10);
-                        }
-                        updateUI();
-                        showNotification("NODE SYNCHRONIZED", "Local core database block offline synchronized.");
+                        if (PremiumState.quantumShield) GameState.shield = Math.min(GameState.maxShield, GameState.shield + 10);
+                        updateUI(); showNotification("NODE SYNCHRONIZED", "Local core database block offline synchronized.");
                     }
                 }
             });
 
-            // Draw Anomalies (Glowing Red triangles and squares)
             for (let i = GameState.anomalies.length - 1; i >= 0; i--) {
                 const enemy = GameState.anomalies[i];
-                
-                // Vector tracking calculations
                 const dx = GameState.playerPos.x - enemy.pos.x;
                 const dz = GameState.playerPos.z - enemy.pos.z;
                 const dist = Math.sqrt(dx*dx + dz*dz);
 
                 if (enemy.type === 'chaser') {
-                    // Chase behavior
                     if (dist < 250) {
                         const stepSpeed = (enemy.speed * 85 + GameState.level * 3) * delta;
                         enemy.pos.x += (dx / dist) * stepSpeed;
                         enemy.pos.z += (dz / dist) * stepSpeed;
                     }
-
-                    // Touch impact damage
                     if (dist < 15) {
                         const tickDmg = (18 + GameState.level * 2) * delta;
-                        if (PremiumState.quantumShield && GameState.shield > 0) {
-                            GameState.shield = Math.max(0, GameState.shield - tickDmg);
-                        } else {
-                            GameState.health -= tickDmg;
-                        }
+                        if (PremiumState.quantumShield && GameState.shield > 0) GameState.shield = Math.max(0, GameState.shield - tickDmg);
+                        else GameState.health -= tickDmg;
                         updateUI();
                         if (Math.random() < 0.1) playSound('damage');
                     }
                 } else if (enemy.type === 'shooter') {
-                    // Range combat behavior
-                    if (dist < 180 && dist > 70) {
-                        fireEnemyWeapon(enemy, GameState.playerPos);
-                    } else if (dist > 180) {
+                    if (dist < 180 && dist > 70) fireEnemyWeapon(enemy, GameState.playerPos);
+                    else if (dist > 180) {
                         const stepSpeed = (enemy.speed * 85) * delta;
                         enemy.pos.x += (dx / dist) * stepSpeed;
                         enemy.pos.z += (dz / dist) * stepSpeed;
                     } else if (dist <= 70) {
-                        // Backaway behavior if close
                         const stepSpeed = 45 * delta;
                         enemy.pos.x -= (dx / dist) * stepSpeed;
                         enemy.pos.z -= (dz / dist) * stepSpeed;
                     }
                 }
 
-                // Render vector graphic paths
                 const ex = enemy.pos.x - GameState.playerPos.x;
                 const ez = enemy.pos.z - GameState.playerPos.z;
 
-                ctx2d.shadowBlur = 10;
-                ctx2d.shadowColor = '#ff0044';
-                ctx2d.strokeStyle = '#ff0044';
-                ctx2d.lineWidth = 2;
-
+                ctx2d.shadowBlur = 10; ctx2d.shadowColor = '#ff0044'; ctx2d.strokeStyle = '#ff0044'; ctx2d.lineWidth = 2;
                 ctx2d.beginPath();
                 if (enemy.type === 'chaser') {
-                    // Draw neon octahedron silhouette
-                    ctx2d.moveTo(ex, ez - 10);
-                    ctx2d.lineTo(ex + 10, ez);
-                    ctx2d.lineTo(ex, ez + 10);
-                    ctx2d.lineTo(ex - 10, ez);
-                    ctx2d.closePath();
+                    ctx2d.moveTo(ex, ez - 10); ctx2d.lineTo(ex + 10, ez); ctx2d.lineTo(ex, ez + 10); ctx2d.lineTo(ex - 10, ez); ctx2d.closePath();
                 } else {
-                    // Draw tactical shooter square vector
                     ctx2d.strokeRect(ex - 8, ez - 8, 16, 16);
                 }
                 ctx2d.stroke();
-
-                // Health indicators
-                ctx2d.fillStyle = '#ff0044';
-                ctx2d.fillRect(ex - 10, ez - 15, (enemy.hp / enemy.maxHp) * 20, 3);
+                ctx2d.fillStyle = '#ff0044'; ctx2d.fillRect(ex - 10, ez - 15, (enemy.hp / enemy.maxHp) * 20, 3);
             }
 
-            // Draw Premium Drone companion (Orbit dot + laser line)
             if (PremiumState.droneCompanion) {
                 const droneX = Math.cos(GameState.droneOrbitAngle) * 35;
                 const droneZ = Math.sin(GameState.droneOrbitAngle) * 35;
-
-                ctx2d.shadowBlur = 8;
-                ctx2d.shadowColor = '#00ffff';
-                ctx2d.fillStyle = '#00ffff';
-                ctx2d.beginPath();
-                ctx2d.arc(droneX, droneZ, 4, 0, Math.PI * 2);
-                ctx2d.fill();
+                ctx2d.shadowBlur = 8; ctx2d.shadowColor = '#00ffff'; ctx2d.fillStyle = '#00ffff';
+                ctx2d.beginPath(); ctx2d.arc(droneX, droneZ, 4, 0, Math.PI * 2); ctx2d.fill();
 
                 if (GameState.droneLaserTarget && GameState.droneLaserTarget.age < 0.15) {
                     GameState.droneLaserTarget.age += delta;
-                    ctx2d.strokeStyle = '#00ffff';
-                    ctx2d.lineWidth = 2;
+                    ctx2d.strokeStyle = '#00ffff'; ctx2d.lineWidth = 2;
                     ctx2d.beginPath();
                     ctx2d.moveTo(GameState.droneLaserTarget.from.x - GameState.playerPos.x, GameState.droneLaserTarget.from.z - GameState.playerPos.z);
                     ctx2d.lineTo(GameState.droneLaserTarget.to.x - GameState.playerPos.x, GameState.droneLaserTarget.to.z - GameState.playerPos.z);
@@ -2044,176 +1639,99 @@
                 }
             }
 
-            // Draw Player Bullets
-            ctx2d.shadowBlur = 8;
-            ctx2d.shadowColor = PremiumState.plasmaRifle ? '#a855f7' : '#00ffff';
-            ctx2d.strokeStyle = PremiumState.plasmaRifle ? '#a855f7' : '#00ffff';
-            ctx2d.lineWidth = 3;
+            ctx2d.shadowBlur = 8; ctx2d.shadowColor = PremiumState.plasmaRifle ? '#a855f7' : '#00ffff'; ctx2d.strokeStyle = PremiumState.plasmaRifle ? '#a855f7' : '#00ffff'; ctx2d.lineWidth = 3;
 
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const b = bullets[i];
-                b.pos.x += b.dir.x * 380 * delta;
-                b.pos.z += b.dir.z * 380 * delta;
-                b.age += delta;
+                b.pos.x += b.dir.x * 380 * delta; b.pos.z += b.dir.z * 380 * delta; b.age += delta;
+                const bx = b.pos.x - GameState.playerPos.x; const bz = b.pos.z - GameState.playerPos.z;
 
-                const bx = b.pos.x - GameState.playerPos.x;
-                const bz = b.pos.z - GameState.playerPos.z;
-
-                ctx2d.beginPath();
-                ctx2d.moveTo(bx, bz);
-                ctx2d.lineTo(bx - b.dir.x * 12, bz - b.dir.z * 12);
-                ctx2d.stroke();
+                ctx2d.beginPath(); ctx2d.moveTo(bx, bz); ctx2d.lineTo(bx - b.dir.x * 12, bz - b.dir.z * 12); ctx2d.stroke();
 
                 let hit = false;
                 for (let j = GameState.anomalies.length - 1; j >= 0; j--) {
                     const enemy = GameState.anomalies[j];
-                    const d = Math.sqrt(Math.pow(b.pos.x - enemy.pos.x, 2) + Math.pow(b.pos.z - enemy.pos.z, 2));
-                    
-                    if (d < 16) {
-                        enemy.hp -= b.damage;
-                        hit = true;
-
-                        if (enemy.hp <= 0) {
-                            createExplosion(enemy.pos, '#ff3300');
-                            GameState.anomalies.splice(j, 1);
-                        }
+                    if (Math.sqrt(Math.pow(b.pos.x - enemy.pos.x, 2) + Math.pow(b.pos.z - enemy.pos.z, 2)) < 16) {
+                        enemy.hp -= b.damage; hit = true;
+                        if (enemy.hp <= 0) { createExplosion(enemy.pos, '#ff3300'); GameState.anomalies.splice(j, 1); }
                         break;
                     }
                 }
-
-                if (hit || b.age > 1.8) {
-                    bullets.splice(i, 1);
-                }
+                if (hit || b.age > 1.8) bullets.splice(i, 1);
             }
 
-            // Draw Enemy Bullets
-            ctx2d.shadowBlur = 8;
-            ctx2d.shadowColor = '#ff0044';
-            ctx2d.strokeStyle = '#ff0044';
-            ctx2d.lineWidth = 2;
-
+            ctx2d.shadowColor = '#ff0044'; ctx2d.strokeStyle = '#ff0044'; ctx2d.lineWidth = 2;
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 const eb = enemyBullets[i];
-                eb.pos.x += eb.dir.x * 240 * delta;
-                eb.pos.z += eb.dir.z * 240 * delta;
-                eb.age += delta;
+                eb.pos.x += eb.dir.x * 240 * delta; eb.pos.z += eb.dir.z * 240 * delta; eb.age += delta;
+                const ebx = eb.pos.x - GameState.playerPos.x; const ebz = eb.pos.z - GameState.playerPos.z;
 
-                const ebx = eb.pos.x - GameState.playerPos.x;
-                const ebz = eb.pos.z - GameState.playerPos.z;
+                ctx2d.beginPath(); ctx2d.moveTo(ebx, ebz); ctx2d.lineTo(ebx - eb.dir.x * 8, ebz - eb.dir.z * 8); ctx2d.stroke();
 
-                ctx2d.beginPath();
-                ctx2d.moveTo(ebx, ebz);
-                ctx2d.lineTo(ebx - eb.dir.x * 8, ebz - eb.dir.z * 8);
-                ctx2d.stroke();
-
-                const d = Math.sqrt(ebx*ebx + ebz*ebz);
-                if (d < 12) {
+                if (Math.sqrt(ebx*ebx + ebz*ebz) < 12) {
                     const dDamage = 12 + (GameState.level * 2);
-                    if (PremiumState.quantumShield && GameState.shield > 0) {
-                        GameState.shield = Math.max(0, GameState.shield - dDamage);
-                    } else {
-                        GameState.health -= dDamage;
-                    }
-                    updateUI();
-                    playSound('damage');
-                    
-                    enemyBullets.splice(i, 1);
-                    continue;
+                    if (PremiumState.quantumShield && GameState.shield > 0) GameState.shield = Math.max(0, GameState.shield - dDamage);
+                    else GameState.health -= dDamage;
+                    updateUI(); playSound('damage');
+                    enemyBullets.splice(i, 1); continue;
                 }
-
-                if (eb.age > 2.8) {
-                    enemyBullets.splice(i, 1);
-                }
+                if (eb.age > 2.8) enemyBullets.splice(i, 1);
             }
 
-            // Draw Explosive Sparks Particles
             ctx2d.shadowBlur = 6;
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.pos.x += p.velocity.x * delta;
-                p.pos.z += p.velocity.z * delta;
-                p.age += delta;
+                p.pos.x += p.velocity.x * delta; p.pos.z += p.velocity.z * delta; p.age += delta;
+                const px = p.pos.x - GameState.playerPos.x; const pz = p.pos.z - GameState.playerPos.z;
 
-                const px = p.pos.x - GameState.playerPos.x;
-                const pz = p.pos.z - GameState.playerPos.z;
-
-                ctx2d.shadowColor = p.color;
-                ctx2d.fillStyle = p.color;
-                
+                ctx2d.shadowColor = p.color; ctx2d.fillStyle = p.color;
                 ctx2d.fillRect(px, pz, 2, 2);
-
-                if (p.age > 0.45) {
-                    particles.splice(i, 1);
-                }
+                if (p.age > 0.45) particles.splice(i, 1);
             }
 
             ctx2d.restore();
+            ctx2d.save(); ctx2d.translate(canvas.width / 2, canvas.height / 2);
+            ctx2d.rotate(Math.atan2(mousePos.y - canvas.height / 2, mousePos.x - canvas.width / 2));
 
-            // Draw Player centrally (Glowing Cyan Triangle vector ship)
-            ctx2d.save();
-            ctx2d.translate(canvas.width / 2, canvas.height / 2);
-
-            const pAngle = Math.atan2(mousePos.y - canvas.height / 2, mousePos.x - canvas.width / 2);
-            ctx2d.rotate(pAngle);
-
-            ctx2d.shadowBlur = 15;
-            ctx2d.shadowColor = '#00ffff';
-            ctx2d.strokeStyle = '#00ffff';
-            ctx2d.fillStyle = '#010f1c';
-            ctx2d.lineWidth = 3;
-
-            ctx2d.beginPath();
-            ctx2d.moveTo(12, 0);
-            ctx2d.lineTo(-10, -8);
-            ctx2d.lineTo(-6, 0);
-            ctx2d.lineTo(-10, 8);
-            ctx2d.closePath();
-            ctx2d.fill();
-            ctx2d.stroke();
-
-            ctx2d.restore();
-            ctx2d.shadowBlur = 0; // Restore context glow specs
+            ctx2d.shadowBlur = 15; ctx2d.shadowColor = '#00ffff'; ctx2d.strokeStyle = '#00ffff'; ctx2d.fillStyle = '#010f1c'; ctx2d.lineWidth = 3;
+            ctx2d.beginPath(); ctx2d.moveTo(12, 0); ctx2d.lineTo(-10, -8); ctx2d.lineTo(-6, 0); ctx2d.lineTo(-10, 8); ctx2d.closePath();
+            ctx2d.fill(); ctx2d.stroke();
+            ctx2d.restore(); ctx2d.shadowBlur = 0;
         }
 
-        // Window resize event handling
-        window.addEventListener('resize', onWindowResize, false);
-        function onWindowResize() {
-            if (GameState.isOfflineEngine) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                return;
-            }
+        window.addEventListener('resize', () => {
+            if (GameState.isOfflineEngine) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; return; }
             if (!camera || !renderer) return; 
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+        });
 
-        // Register start gestures
         startBtn.addEventListener('click', async () => {
             await initAudio();
             initGraphics();
-            
-            if (GameState.isOfflineEngine) return;
-
-            if (isTouchDevice) {
+            if (GameState.isOfflineEngine) {
                 startMenu.classList.add('hidden');
                 uiLayer.classList.remove('hidden');
-                
-                const mobileControls = document.getElementById('mobile-controls');
-                mobileControls.classList.remove('hidden');
-                mobileControls.classList.add('flex');
-                
-                camera.rotation.order = 'YXZ'; 
+                if (isTouchDevice) {
+                    const mobileControls = document.getElementById('mobile-controls');
+                    mobileControls.classList.remove('hidden'); mobileControls.classList.add('flex');
+                }
                 GameState.isPlaying = true;
-            } else {
-                controls.lock();
+                return;
             }
+
+            if (isTouchDevice) {
+                startMenu.classList.add('hidden'); uiLayer.classList.remove('hidden');
+                const mobileControls = document.getElementById('mobile-controls');
+                mobileControls.classList.remove('hidden'); mobileControls.classList.add('flex');
+                camera.rotation.order = 'YXZ'; GameState.isPlaying = true;
+            } else { controls.lock(); }
         });
 
-        // Loop animation trigger
-        animate();
+        // Error boundary to maintain continuity
+        window.addEventListener('error', (e) => console.warn("Engine execution handled gracefully: ", e.message));
 
+        animate();
     </script>
 </body>
 </html>
